@@ -78,6 +78,7 @@ my $om = Net::Async::Omegle->new(
     on_stoptype      => \&stoptype_cb,
     on_disconnect    => \&disconnect_cb,
     on_connect       => \&connect_cb,
+    on_got_id        => \&got_id_cb,
     on_commonlikes   => \&commonlikes_cb,
     on_question      => \&question_cb,
     on_spydisconnect => \&spydisconnect_cb,
@@ -88,6 +89,7 @@ my $om = Net::Async::Omegle->new(
     on_gotcaptcha    => \&gotcaptcha_cb,
     on_badcaptcha    => \&badcaptcha_cb,
     server           => 'bajor.omegle.com',  # don't use this option without reason
+    static           => 1,                   # or this one
     topics           => ['IRC', 'Omegle', 'ponies'],
     use_likes        => 1,
     use_question     => 1,
@@ -99,6 +101,33 @@ my $om = Net::Async::Omegle->new(
 
 Creates a new Net::Async::Omegle::Session object. This object represents a single Omegle session. Any of the options listed above
 may be used, but all are optional.
+
+```perl
+my $sess = $om->new(
+    on_error         => \&error_cb,
+    on_chat          => \&chat_cb,
+    on_type          => \&type_cb,
+    on_stoptype      => \&stoptype_cb,
+    on_disconnect    => \&disconnect_cb,
+    on_connect       => \&connect_cb,
+    on_got_id        => \&got_id_cb,
+    on_commonlikes   => \&commonlikes_cb,
+    on_question      => \&question_cb,
+    on_spydisconnect => \&spydisconnect_cb,
+    on_spytype       => \&spytype_cb,
+    on_spystoptype   => \&spystoptype_cb,
+    on_spychat       => \&spychat_cb,
+    on_wantcaptcha   => \&gotcaptcha_cb,
+    on_gotcaptcha    => \&gotcaptcha_cb,
+    on_badcaptcha    => \&badcaptcha_cb,
+    server           => 'bajor.omegle.com',  # don't use this option without reason
+    static           => 1,                   # or this one
+    topics           => ['IRC', 'Omegle', 'ponies'],
+    use_likes        => 1,
+    use_question     => 1,
+    no_type          => 1
+);
+```
 
 ### $sess->start()
 
@@ -159,7 +188,7 @@ Submits a response to recaptcha. If incorrect, a new captcha will be presented a
 $sess->submit_captcha('some CAPTCHA');
 ```
 
-### $sess->update()
+### $sess->update() or $om->update()
 
 Method does not exist. This functionality is now handled automatically.
 
@@ -172,12 +201,47 @@ You should never need to use any of the information listed here.
 Creates a new Omegle session object. You don't need to do this because it is done by
 `$om->new()`.
 
+```perl
+my $sess = Net::Async::Omegle::Session->new(
+    on_error         => \&error_cb,
+    on_chat          => \&chat_cb,
+    on_type          => \&type_cb,
+    on_stoptype      => \&stoptype_cb,
+    on_disconnect    => \&disconnect_cb,
+    on_connect       => \&connect_cb,
+    on_got_id        => \&got_id_cb,
+    on_commonlikes   => \&commonlikes_cb,
+    on_question      => \&question_cb,
+    on_spydisconnect => \&spydisconnect_cb,
+    on_spytype       => \&spytype_cb,
+    on_spystoptype   => \&spystoptype_cb,
+    on_spychat       => \&spychat_cb,
+    on_wantcaptcha   => \&gotcaptcha_cb,
+    on_gotcaptcha    => \&gotcaptcha_cb,
+    on_badcaptcha    => \&badcaptcha_cb,
+    server           => 'bajor.omegle.com',  # don't use this option without reason
+    static           => 1,                   # or this one
+    topics           => ['IRC', 'Omegle', 'ponies'],
+    use_likes        => 1,
+    use_question     => 1,
+    no_type          => 1
+);
+```
+
 ### $om->add_session($sess)
 
 Adds a session to the Net::Async::Omegle object. You don't need to do this because it is
 done by `$om->new()`.
 
+```perl
+$om->add_session($sess);
+```
+
 ### $om->remove_session($sess)
 
 Removes a session from the Net::Async::Omegle object. You don't need to do this because it
 is done automatically when the session is destroyed.
+
+```perl
+$om->remove_session($sess);
+```
