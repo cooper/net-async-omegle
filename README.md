@@ -39,7 +39,7 @@ Callbacks (prefixed with on) must be CODE references. What is in parenthesis wil
 object will always be the first argument of all callbacks.
 
 - __on_connect__: callback called when the stranger connects
-- __on_got_id__: callback called when the Omegle session ID is represented
+- __on_got_id__ (id): callback called when the Omegle session ID is represented
 - __on_disconnect__: callback called when the stranger disconnects
 - __on_error__ (msg): callback called when an error occurs and the session ends
 - __on_chat__ (msg): callback called when the stranger sends a message
