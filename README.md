@@ -7,7 +7,7 @@ common interests system, spying sessions, and question (spy) modes.
   
 As of version 4.2, Net::Async::Omegle depends on EventedObject, located at http://github.com/cooper/evented-object.
 
-## author
+## Author
 
 Mitchell Cooper, <mitchell@notroll.net>  
 Feel free to contact me via github's messaging system if you have a question or request.  
@@ -17,10 +17,8 @@ You are free to modify and redistribute Net::Async::Omegle under the terms of th
 
 Your instance of Net::Async::Omegle will fetch these variables from Omegle every five minutes.
 
-- __$om->{online}__: the number of users on Omegle. it can be refreshed with the update() method of any Net::Async::Omegle instance.
 - __$om->{servers}__: if dynamic server select is enabled, this is the list of available Omegle servers as fetched by update().
 - __$om->{lastserver}__: the index of @servers of the last server used.
-- __$om->{updated}__: the time of the last update of online user count and server list.
 
 During a session, your session object will have the following properties.
 
@@ -32,10 +30,10 @@ During a session, your session object will have the following properties.
 - __$sess->{server}__: the Omegle server this session is connected to.
 - __$sess->{challenge}__: if there is a pending captcha, this is the reCAPTCHA challenge ID.
 
-## options
+## Options
 
-These options are all related to individual Omegle sessions. If you specify options to `$om->new()`, those options will always
-override the ones that you specified to `Net::Async::Omegle->new()`. All options are optional, but not specifying any is useless.
+If you specify options to `$om->new()` (the session constructor), those options will always
+override the ones that you specified to `Net::Async::Omegle->new()`. In other words, All options are optional, but not specifying any is quite useless.
 Callbacks (prefixed with on) must be CODE references. What is in parenthesis will be passed when called. However, the session
 object will always be the first argument of all callbacks.
 
@@ -49,7 +47,7 @@ object will always be the first argument of all callbacks.
  to 'Traditional'
 - __mobile__: true if you wish to identify as connecting from a mobile device
 
-## methods
+## Omegle manager methods
 
 ### $om = Net::Async::Omegle->new(%options)
 
@@ -82,6 +80,36 @@ my $om = Net::Async::Omegle->new(
     no_type          => 1
 );
 ```
+
+### $om->user_count()
+
+Returns the number of users currently online.  
+Optionally returns the time at which this information was last updated.
+
+```perl
+my $count = $om->user_count;
+my ($user_count, $update_time) = $om->user_count;
+
+say "$user_count users online as of ", scalar localtime time;
+```
+
+### $om->update()
+
+Updates Omegle status information. This must be called initially after adding the Omegle
+object to the loop. After the first status information request completes, the `ready`
+event will be fired. From there on, it is safe to call `->start()` on a session instance.  
+This event will only be fired once.
+
+```perl
+my $sess = $om->new();
+$om->update();
+$om->on(ready => sub {
+    say 'Status information received; starting conversation.';
+    $sess->start();
+});
+```
+
+## Omegle session methods
 
 ### $sess = $om->new(%options)
 
@@ -172,62 +200,4 @@ Submits a response to recaptcha. If incorrect, a new captcha will be presented a
 
 ```perl
 $sess->submit_captcha('some CAPTCHA');
-```
-
-### $sess->update() or $om->update()
-
-Method does not exist. This functionality is now handled automatically.
-
-## advanced methods
-
-You should never need to use any of the information listed here.
-
-### $sess = Net::Async::Omegle::Session->new(%options)
-
-Creates a new Omegle session object. You don't need to do this because it is done by
-`$om->new()`.
-
-```perl
-my $sess = Net::Async::Omegle::Session->new(
-    on_error         => \&error_cb,
-    on_chat          => \&chat_cb,
-    on_type          => \&type_cb,
-    on_stoptype      => \&stoptype_cb,
-    on_disconnect    => \&disconnect_cb,
-    on_connect       => \&connect_cb,
-    on_got_id        => \&got_id_cb,
-    on_commonlikes   => \&commonlikes_cb,
-    on_question      => \&question_cb,
-    on_spydisconnect => \&spydisconnect_cb,
-    on_spytype       => \&spytype_cb,
-    on_spystoptype   => \&spystoptype_cb,
-    on_spychat       => \&spychat_cb,
-    on_wantcaptcha   => \&gotcaptcha_cb,
-    on_gotcaptcha    => \&gotcaptcha_cb,
-    on_badcaptcha    => \&badcaptcha_cb,
-    server           => 'bajor.omegle.com',  # don't use this option without reason
-    static           => 1,                   # or this one
-    topics           => ['IRC', 'Omegle', 'ponies'],
-    use_likes        => 1,
-    use_question     => 1,
-    no_type          => 1
-);
-```
-
-### $om->add_session($sess)
-
-Adds a session to the Net::Async::Omegle object. You don't need to do this because it is
-done by `$om->new()`.
-
-```perl
-$om->add_session($sess);
-```
-
-### $om->remove_session($sess)
-
-Removes a session from the Net::Async::Omegle object. You don't need to do this because it
-is done automatically when the session is destroyed.
-
-```perl
-$om->remove_session($sess);
 ```

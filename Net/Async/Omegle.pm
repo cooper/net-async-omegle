@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.2';
+our $VERSION = '4.3';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -72,11 +72,8 @@ sub _init {
 }
 
 # should be called right after $loop->add().
-sub init {
-
-    # initial status update
-    shift->status_update();
-}
+sub init;
+*init = *status_update;
 
 # returns the index of the next server in line to be used
 sub newserver {
@@ -119,6 +116,10 @@ sub get {
     return 1;
 }
 
+# for compatibility.
+sub update;
+*update = *status_update;
+
 # update server status and user count.
 sub status_update {
     my $om = shift;
@@ -155,6 +156,13 @@ sub remove_session {
     delete $om->{sessions}{$sess->{omegle_id}};
     delete $sess->{om};
     return 1;
+}
+
+# returns the number of users currently online.
+sub user_count {
+    my $om = shift;
+    return my @a = ($om->{online} || 0, $om->{updated}) if wantarray; 
+    return $om->{online} || 0;
 }
 
 1
