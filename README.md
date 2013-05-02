@@ -22,7 +22,6 @@ Your instance of Net::Async::Omegle will fetch these variables from Omegle every
 
 During a session, your session object will have the following properties.
 
-- __$sess->{type}__: the type of running session. see session types section below.
 - __$sess->{connected}__: true if the session has actually been established.
 - __$sess->{omegle_id}__: your Omegle client ID.
 - __$sess->{typing}__: true if the stranger is typing.
@@ -54,14 +53,14 @@ object will always be the first argument of all callbacks.
 - __on_wantcaptcha__: callback called when human verification is required
 - __on_gotcaptcha__ (image URL): callback called when captcha URL is resolved
 - __on_badcaptcha__: callback called when a submitted captcha is incorrect
-- __use_likes__: true if you wish to look for strangers similar to you
-- __use_question__: true if you wish to enable spy mode and ask a question
-- __want_question__: true if you wish to enable spy mode and be asked a question
-- __topics__: array reference of your interests (if use_likes enabled)
-- __question__: a question for two strangers to discuss (if use_question enabled)
+- __topics__: array reference of your interests (if type = CommonInterests)
+- __question__: a question for two strangers to discuss (if type = AskQuestion)
 - __server__: specify a server (don't do this.)
 - __static__: if true, do not cycle through server list (don't do this.)
 - __no_type__: true if you think typing events are annoying and useless
+- __ua__: HTTP user agent string. defaults to $Net::Async::Omegle::ua (not session-specific)
+- __type__: type of session ('Traditional', 'CommonInterests', 'AskQuestion', or 'AnswerQuestion') - defaults to 'Traditional'
+- __mobile__: true if you wish to identify as connecting from a mobile device
 
 ## methods
 

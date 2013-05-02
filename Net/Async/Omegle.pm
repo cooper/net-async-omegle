@@ -7,7 +7,7 @@
 #             ...and net-async-omegle. #
 ########################################
 ;
-# Copyright (c) 2011-2012, Mitchell Cooper
+# Copyright (c) 2011-2013, Mitchell Cooper
 
 use warnings;
 use strict;
@@ -20,9 +20,11 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = 3.9;
+our $VERSION = '3.91';
+
+# default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
-Chrome/17.0.963.12 Safari/535.11"; $ua =~ s/\n/ /g;
+Chrome/17.0.963.12 Safari/535.11";
 
 sub new {
     my $ref = shift;
@@ -59,7 +61,8 @@ sub _init {
     my $om = shift;
 
     # create HTTP instance
-    my $http = $om->{http} = Net::Async::HTTP->new(user_agent => $ua);
+    $ua =~ s/\n/ /g;
+    my $http = $om->{http} = Net::Async::HTTP->new(user_agent => $om->{ua} || $ua);
     $om->add_child($http);
 
     # create status update timer

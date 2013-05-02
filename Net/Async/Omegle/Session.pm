@@ -7,14 +7,8 @@
 #             ...and net-async-omegle. #
 ########################################
 ;
-# Copyright (c) 2011-2012, Mitchell Cooper
-#
-# session modes:
-#    undef: no session
-#    0: traditional
-#    1: traditional + common likes submitted
-#    2: spy mode (you're the spy)
-#    3: spy mode (you're spied on)
+# Copyright (c) 2011-2013, Mitchell Cooper
+
 
 use warnings;
 use strict;
@@ -23,14 +17,6 @@ use 5.010;
 use URI::Escape::XS 'encodeURIComponent';
 
 our $VERSION = $Net::Async::Omegle::VERSION;
-
-# session modes.
-my %SESS = (
-    NORMAL => 0,
-    COMMON => 1,
-    SPYER  => 2,
-    SPYEE  => 3
-);
 
 # create a new session object.
 sub new {
@@ -44,31 +30,35 @@ sub start {
     my $sess = shift;
     my $om   = $sess->{om} or return;
     $sess->{server} = $om->newserver;
-    $sess->{type}   = $SESS{NORMAL};
+    my $type = $sess->opt('type') || 'Traditional';
+    
+    # basic parameters.
     my $startopts   = '?rcs=1&spid=';
 
-    # enable common interests.
-    if ($sess->opt('use_likes')) {
-        $startopts   .= '&topics='.encodeURIComponent($sess->opt('topics'));
-        $sess->{type} = $SESS{COMMON};
+    # we are a cell phone!
+    $startops .= '&m=1' if $sess->opt('mobile');
+
+    # common interests mode.
+    if ($type eq 'CommonInterests') {
+        my $topics  = JSON::encode_json($sess->opt('topics'));
+        $startopts .= '&topics='.encodeURIComponent($topics);
         $sess->{stopsearching} = time() + 5;
     }
 
-    # enable question mode.
-    elsif ($sess->opt('use_question')) {
-        $startopts   .= '&ask='.encodeURIComponent($sess->opt('question'));
-        $sess->{type} = $SESS{SPYER};
+    # ask mode.
+    elsif ($type eq 'AskQuestion') {
+        $startopts .= '&ask='.encodeURIComponent($sess->opt('question'));
     }
 
-    # enable answer mode.
-    elsif ($sess->opt('want_question')) {
-        $startopts   .= '&wantsspy=1';
-        $sess->{type} = $SESS{SPYEE};
+    # answer mode.
+    elsif ($type eq 'AnswerQuestion') {
+        $startopts .= '&wantsspy=1';
     }
 
     # start a session and get its client ID.
     $om->post("http://$$sess{server}/start$startopts", [], sub {
         shift() =~ m/^"(.+)"$/ or return;
+        
         $sess->{omegle_id}  = $1;
         $om->{sessions}{$1} = $sess;
 
@@ -77,6 +67,7 @@ sub start {
 
         # request the first event.
         $sess->request_next_event;
+        
     });
 
     return 1;
@@ -101,7 +92,7 @@ sub say {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} == $SESS{SPYER};
+    return if $sess->{type} == 'AskQuestion';
 
     $sess->post('send', [ msg => $msg ]);
 }
@@ -115,7 +106,7 @@ sub type {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} == $SESS{SPYER};
+    return if $sess->{type} == 'AskQuestion';
 
     $sess->post('typing');
 }
@@ -129,7 +120,7 @@ sub stoptype {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} == $SESS{SPYER};
+    return if $sess->{type} == 'AskQuestion';
 
     $sess->post('stoptyping');
 }
