@@ -33,10 +33,10 @@ sub start {
     my $type = $sess->opt('type') || 'Traditional';
     
     # basic parameters.
-    my $startopts   = '?rcs=1&spid=';
+    my $startopts = '?rcs=1&spid=';
 
     # we are a cell phone!
-    $startops .= '&m=1' if $sess->opt('mobile');
+    $startopts .= '&m=1' if $sess->opt('mobile');
 
     # common interests mode.
     if ($type eq 'CommonInterests') {
@@ -145,6 +145,22 @@ sub handle_event {
 
     given ($event) {
 
+
+        # status info update.
+        when ('statusInfo') {
+            # TODO: fire user count change.
+        }
+
+        # message from server.
+        when ('serverMessage') {
+            # TODO.
+        }
+
+        # waiting on a chatting partner.
+        when ('waiting') {
+            # TODO.
+        }
+
         # session established.
         when ('connected') {
             $sess->fire('connect');
@@ -222,12 +238,15 @@ sub handle_event {
         }
 
         # number of people online.
+        # XXX: this event is obsolete due to statusInfo.
+        # however, Omegle appears to still send it under certain circumstances.
+        # for that reason, we will continue to handle it.
         when ('count') {
             $om->{online} = $event_args[0];
             $sess->fire(count => $event_args[0]);
         }
 
-        # an error has occured and the session must end.
+        # an error has occured, and the session must end.
         when ('error') {
             $sess->fire(error => $event_args[0]);
             $sess->done;

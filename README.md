@@ -1,9 +1,9 @@
 # Net::Async::Omegle
 
-This is a Perl interface to Omegle.com for IO::Async. It supports all Omegle events, allowing your program to respond to messages,
+This is a Perl interface to the Omegle.com anonymous chatting service. It is designed for use with the IO::Async event framework. Net::Async::Omegle supports all Omegle events, allowing your program to respond to messages,
 typing, stopped typing, connects, disconnects, and more. Using IO::Async and Net::Async::HTTP, it is completely non-blocking and can
 be placed easily in many programs. Recently, support has been added for Omegle's reCAPTCHA API and many other new features such as the
-common interests system, spying sessions, and question mode.
+common interests system, spying sessions, and question (spy) modes.
 
 ## author
 

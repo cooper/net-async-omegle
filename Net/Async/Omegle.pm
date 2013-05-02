@@ -20,7 +20,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '3.91';
+our $VERSION = '4.1';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -37,7 +37,8 @@ sub new {
     }
 
     # create a new Omegle instance (IO::Async::Notifier).
-    $ref->SUPER::new(@_);
+    return $ref->SUPER::new(@_);
+    
 }
 
 # IO::Async::Notifier configure.
@@ -84,7 +85,7 @@ sub init {
 sub newserver {
     my $om = shift;
     $om->{servers}[
-        $om->{lastserver} == $#{$om->{servers}} ? $om->{lastserver} = 0
+        (defined $om->{lastserver} && $om->{lastserver} == $#{$om->{servers}}) ? $om->{lastserver} = 0
         : ++$om->{lastserver}
     ]
 }
