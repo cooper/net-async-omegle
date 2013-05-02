@@ -3,7 +3,9 @@
 This is a Perl interface to the Omegle.com anonymous chatting service. It is designed for use with the IO::Async event framework. Net::Async::Omegle supports all Omegle events, allowing your program to respond to messages,
 typing, stopped typing, connects, disconnects, and more. Using IO::Async and Net::Async::HTTP, it is completely non-blocking and can
 be placed easily in many programs. Recently, support has been added for Omegle's reCAPTCHA API and many other new features such as the
-common interests system, spying sessions, and question (spy) modes.
+common interests system, spying sessions, and question (spy) modes.  
+  
+As of version 4.2, Net::Async::Omegle depends on EventedObject, located at http://github.com/cooper/evented-object.
 
 ## author
 
@@ -37,29 +39,14 @@ override the ones that you specified to `Net::Async::Omegle->new()`. All options
 Callbacks (prefixed with on) must be CODE references. What is in parenthesis will be passed when called. However, the session
 object will always be the first argument of all callbacks.
 
-- __on_connect__: callback called when the stranger connects
-- __on_got_id__ (id): callback called when the Omegle session ID is represented
-- __on_disconnect__: callback called when the stranger disconnects
-- __on_error__ (msg): callback called when an error occurs and the session ends
-- __on_chat__ (msg): callback called when the stranger sends a message
-- __on_type__: callback called when the stranger begins to type
-- __on_stoptype__: callback called when the stranger stops typing
-- __on_commonlikes__ (likes): callback called when common interests are found
-- __on_question__ (question): callback called when a question is asked (even by you)
-- __on_spydisconnect__ (stranger): callback called when a spyee disconnects
-- __on_spytype__ (stranger): callback called when a spyee is typing
-- __on_spystoptype__ (stranger): callback called when a spyee stops typing
-- __on_spychat__ (stranger, message): callback called when a spyee sends a message
-- __on_wantcaptcha__: callback called when human verification is required
-- __on_gotcaptcha__ (image URL): callback called when captcha URL is resolved
-- __on_badcaptcha__: callback called when a submitted captcha is incorrect
+- __type__: type of session ('Traditional', 'CommonInterests', 'AskQuestion', or 'AnswerQuestion') - defaults
+- __server__: specify a server (don't do this.)
 - __topics__: array reference of your interests (if type = CommonInterests)
 - __question__: a question for two strangers to discuss (if type = AskQuestion)
-- __server__: specify a server (don't do this.)
 - __static__: if true, do not cycle through server list (don't do this.)
 - __no_type__: true if you think typing events are annoying and useless
 - __ua__: HTTP user agent string. defaults to $Net::Async::Omegle::ua (not session-specific)
-- __type__: type of session ('Traditional', 'CommonInterests', 'AskQuestion', or 'AnswerQuestion') - defaults to 'Traditional'
+ to 'Traditional'
 - __mobile__: true if you wish to identify as connecting from a mobile device
 
 ## methods

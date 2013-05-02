@@ -11,8 +11,10 @@
 
 use warnings;
 use strict;
-use base 'IO::Async::Notifier';
+use parent qw(IO::Async::Notifier EventedObject); # notifier must be first for SUPER.
 use 5.010;
+
+use EventedObject;
 
 use IO::Async::Timer::Periodic;
 use Net::Async::HTTP;
@@ -20,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.1';
+our $VERSION = '4.2';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -45,12 +47,7 @@ sub new {
 sub configure {
     my ($om, %params) = @_;
 
-    foreach (qw|
-        on_debug on_got_id on_connect on_disconnect on_error on_chat on_type on_stoptype
-        on_commonlikes on_question on_spydisconnect on_spytype on_spystoptype on_spychat
-        on_wantcaptcha on_gotcaptcha on_badcaptcha use_likes use_question want_question
-        topics question server static no_type
-    |) {
+    foreach (qw|topics question server static no_type|) {
         $om->{opts}{$_} = delete $params{$_} if exists $params{$_};
     }
 
@@ -132,6 +129,13 @@ sub status_update {
         $om->{lastserver} = $#{$data->{servers}};
         $om->{online}     = $data->{count};
         $om->{updated}    = time;
+        
+        # fire ready event if we haven't already.
+        if (!$om->{fired_ready}) {
+            $om->fire('ready');
+            $om->{fired_ready} = 1;
+        }
+        
     });
 }
 

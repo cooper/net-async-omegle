@@ -13,12 +13,15 @@
 use warnings;
 use strict;
 use 5.010;
+use parent 'EventedObject';
 
 use URI::Escape::XS 'encodeURIComponent';
 
 our $VERSION = $Net::Async::Omegle::VERSION;
 
 # create a new session object.
+# typically, this is not used directly.
+# $om->new() should be used instead.
 sub new {
     my ($class, %opts) = @_;
     bless \%opts, $class;
@@ -125,10 +128,18 @@ sub stoptype {
     $sess->post('stoptyping');
 }
 
+# $sess->disconnect()
+# disconnect from Omegle.
+sub disconnect {
+    my $sess = shift;
+    $sess->post('disconnect');
+    $sess->done();
+}
+
 # clean up after a session ends.
 sub done {
     my $sess = shift;
-    delete $sess->{om}{sessions}{$sess->{omegle_id}} if $sess->{omegle_id};
+    $sess->{om}->remove_session($sess) if $sess->{om};
     exists $sess->{$_} && delete $sess->{$_} foreach qw(
         connected omegle_id typing
         typing_1 typing_2 type challenge
@@ -315,16 +326,13 @@ sub post {
     ], $callback, @args);
 }
 
-# fire a callback.
+# fire an event.
+# this fires the event on the session object.
+# it also fires the event on the Omegle object, using the session as the first argument.
 sub fire {
-    my ($sess, $callback, @args) = (shift, 'on_'.shift(), @_);
-    $sess->{$callback}($sess, @args) if $sess->{$callback};
-    $sess->{om}{opts}{$callback}($sess, @args) if $sess->{om}{opts}{$callback};
-
-    # fire debug event.
-    $sess->fire(debug => 'FIRE: '.$callback.q[(].join(', ', @args).q[)])
-    unless $callback eq 'on_debug'; # do not want recursion!
-
+    my ($sess, $event_name, @args) = @_;
+    $sess->fire_event($event_name => @args);
+    $sess->{om}->fire_event($event_name => $sess, @args) if $sess->{om};
     return 1;
 }
 

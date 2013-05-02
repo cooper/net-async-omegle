@@ -6,27 +6,26 @@ use warnings;
 use strict;
 use feature 'say';
 
-my $om = Net::Async::Omegle->new(
+# create an Omegle manager instance.
+my $om = Net::Async::Omegle->new;
 
-);
-
+# create an IO::Async::Loop and add the Omegle manager instance.
 my $loop = IO::Async::Loop->new;
 $loop->add($om);
-$om->init();
+$om->init;
 
 
-my $sess = $om->new(
-    on_connect => sub { say "Connected!" },
-    on_got_id  => sub { say "Conversation ID: ".$_[1] },
-    on_debug   => sub { say "@_" }
-);
-
-my $timer = IO::Async::Timer::Countdown->new(
-    delay => 3,
-    on_expire => sub { $sess->start() }
-);
-$timer->start();
-$loop->add($timer);
+# create a session.
+my $sess = $om->new();
+$sess->on(debug => sub { say "@_" });
 
 
+# start it when Omegle is ready.
+$om->on(ready => sub {
+    say 'Ready to connect.';
+    $sess->start;
+});
+
+
+# run the loop.
 $loop->run;
