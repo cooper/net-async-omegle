@@ -159,7 +159,8 @@ sub handle_event {
 
         # status info update.
         when ('statusInfo') {
-            # TODO: fire user count change.
+            $sess->{om}->_update_status($event_args[0]);
+            # status_update called later.
         }
 
         # message from server.

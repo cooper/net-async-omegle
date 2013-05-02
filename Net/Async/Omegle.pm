@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.3';
+our $VERSION = '4.4';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -125,19 +125,28 @@ sub status_update {
     my $om = shift;
 
     $om->post('http://omegle.com/status', [], sub {
-        my $data          = JSON::decode_json(shift);
-        $om->{servers}    = $data->{servers};
-        $om->{lastserver} = $#{$data->{servers}};
-        $om->{online}     = $data->{count};
-        $om->{updated}    = time;
-        
-        # fire ready event if we haven't already.
-        if (!$om->{fired_ready}) {
-            $om->fire('ready');
-            $om->{fired_ready} = 1;
-        }
-        
+        my $data = JSON::decode_json(shift);
+        $om->_update_status($data);
     });
+}
+
+# handle a status update.
+sub _update_status {
+    my ($om, $data) = @_;
+    $om->{servers}    = $data->{servers};
+    $om->{lastserver} = $#{$data->{servers}};
+    $om->{online}     = $data->{count};
+    $om->{updated}    = time;
+    
+    # fire the generic status update event.
+    $om->fire('status_update');
+    
+    # fire ready event if we haven't already.
+    if (!$om->{fired_ready}) {
+        $om->fire('ready');
+        $om->{fired_ready} = 1;
+    }
+    
 }
 
 # add a session to this omegle instance.
