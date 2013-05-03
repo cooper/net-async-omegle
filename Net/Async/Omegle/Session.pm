@@ -32,6 +32,10 @@ sub new {
 sub start {
     my $sess = shift;
     my $om   = $sess->{om} or return;
+    
+    # we are already running?
+    return if $sess->{running};
+    
     $sess->{server} = $om->newserver;
     my $type = $sess->opt('type') || 'Traditional';
     
@@ -82,6 +86,7 @@ sub start {
 # $sess->submit_captcha($solution)
 # submit recaptcha request.
 sub submit_captcha {
+    return unless $sess->{running};
     my ($sess, $response) = @_;
     $sess->post('recaptcha', [
         challenge => $sess->{challenge},
@@ -117,9 +122,9 @@ sub type {
     $sess->post('typing');
 }
 
-# $sess->stoptype()
+# $sess->stop_typing()
 # make it appear that you have stopped typing.
-sub stoptype {
+sub stop_typing {
     my $sess = shift;
 
     # session not established entirely
@@ -131,10 +136,14 @@ sub stoptype {
     $sess->post('stoptyping');
 }
 
+# compat.
+sub stoptype { &stop_typing }
+
 # $sess->disconnect()
 # disconnect from Omegle.
 sub disconnect {
     my $sess = shift;
+    return unless $sess->{running};
     $sess->post('disconnect');
     $sess->done();
 }
@@ -373,13 +382,13 @@ sub id {
 }
 
 # compat.
-sub omegle_id;
-*omegle_id = *id;
+sub omegle_id { &id }
 
 # returns true if the stranger is typing.
 # in ask/answer modes, returns true if either stranger is typing.
 sub stranger_typing {
     my ($sess, $num) = @_;
+    return unless $sess->{connected};
     if (defined $num) {
         return $sess->{"typing_$num"};
     }

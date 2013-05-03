@@ -75,8 +75,7 @@ sub _init {
 }
 
 # should be called right after $loop->add().
-sub init;
-*init = *status_update;
+sub init { &status_update }
 
 # returns the index of the next server in line to be used
 sub newserver {
@@ -119,9 +118,8 @@ sub get {
     return 1;
 }
 
-# for compatibility.
-sub update;
-*update = *status_update;
+# compat.
+sub update { &status_update }
 
 # update server status and user count.
 sub status_update {

@@ -327,7 +327,7 @@ Log events are fired for debugging purposes.
 
 ### $om = Net::Async::Omegle->new(%options)
 
-Creates an Omegle object. After creating it, you should `->add` it to your IO::Async::Loop. Once it has been added, you should
+Creates an Omegle manager object. After creating it, you should `->add` it to your IO::Async::Loop. Once it has been added, you should
 `$om->init` it. Any of the options listed above may be used, but all are optional.
 
 ```perl
@@ -387,6 +387,10 @@ my $server = $om->last_server();
 
 ## Omegle session methods
 
+Session methods are safe for asynchronous callbacks. For example, if you have a timer which sends a 
+message after 5 seconds but the stranger disconnects during that time, calling `->say()`
+is harmless and will do nothing.
+
 ### $sess = $om->new(%options)
 
 Creates a new Net::Async::Omegle::Session object. This object represents a single Omegle session. Any of the options listed above
@@ -406,17 +410,13 @@ my $sess = $om->new(
 ### $sess->start()
 
 Connects to Omegle. This *does not* return the Omegle ID of your session as it does in New::Omegle. It returns true.
-If you need the session ID for whatever reason, use the `on_got_id` event.  
+If you need the session ID for whatever reason, use the `got_id` event.  
 Note: you should not call this method until you know the Omegle manager is ready.
 The `ready` event will be fired on the Omegle manager when this is the case.
 
 ```perl
-$sess->start();
+$om->on(ready => sub { $sess->start() });
 ```
-
-### $sess->go()
-
-Method does not exist. This functionality is now handled automatically.
 
 ### $sess->type()
 
@@ -427,13 +427,13 @@ Returns true or `undef` if there is no session connected.
 $sess->type();
 ```
 
-### $sess->stoptype()
+### $sess->stop_typing()
 
 Makes it appear that you have stopped typing.
 Returns true or `undef` if there is no session connected.
 
 ```perl
-$sess->stoptype();
+$sess->stop_typing();
 ```
 
 ### $sess->say($message)
