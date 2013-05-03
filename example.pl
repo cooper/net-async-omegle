@@ -26,6 +26,10 @@ $sess->on(message => sub {
     my $timer = IO::Async::Timer::Countdown->new(
         delay     => 5,
         on_expire => sub {
+            
+            # we are no longer connected to a stranger.
+            return unless $sess->connected;
+        
             say "You: $msg";
             $sess->say($msg);
         }
