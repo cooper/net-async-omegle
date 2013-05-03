@@ -380,7 +380,10 @@ sub omegle_id;
 # returns true if the stranger is typing.
 # in ask/answer modes, returns true if either stranger is typing.
 sub stranger_typing {
-    my $sess = shift;
+    my ($sess, $num) = @_;
+    if (defined $num) {
+        return $sess->{"typing_$num"};
+    }
     return $sess->{typing} || $sess->{typing_1} || $sess->{typing_2} || undef;
 }
 

@@ -291,10 +291,11 @@ $sess->on(connect => sub {
 });
 ```
 
-### $sess->stranger_typing()
+### $sess->stranger_typing([$stranger_num])
 
 Returns true if the stranger is currently typing. In a mode with multiple strangers,
-this method returns true if either of the two strangers are typing.
+this method returns true if either of the two strangers are typing. Optionally, you may
+suppy `1` or `2` for the typing status of a specific stranger in ask and answer modes.
 
 ```perl
 $sess->on(type => sub {
