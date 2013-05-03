@@ -347,10 +347,14 @@ Returns the number of users currently online.
 Optionally returns the time at which this information was last updated.
 
 ```perl
+
+# just the user count
 my $count = $om->user_count;
+
+# or if you need the update time
 my ($user_count, $update_time) = $om->user_count;
 
-say "$user_count users online as of ", scalar localtime time;
+say "$user_count users online as of ", scalar localtime $update_time;
 ```
 
 ### $om->update()
