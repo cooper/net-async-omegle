@@ -332,22 +332,6 @@ Creates an Omegle object. After creating it, you should `->add` it to your IO::A
 
 ```perl
 my $om = Net::Async::Omegle->new(
-    on_error         => \&error_cb,
-    on_chat          => \&chat_cb,
-    on_type          => \&type_cb,
-    on_stoptype      => \&stoptype_cb,
-    on_disconnect    => \&disconnect_cb,
-    on_connect       => \&connect_cb,
-    on_got_id        => \&got_id_cb,
-    on_commonlikes   => \&commonlikes_cb,
-    on_question      => \&question_cb,
-    on_spydisconnect => \&spydisconnect_cb,
-    on_spytype       => \&spytype_cb,
-    on_spystoptype   => \&spystoptype_cb,
-    on_spychat       => \&spychat_cb,
-    on_wantcaptcha   => \&gotcaptcha_cb,
-    on_gotcaptcha    => \&gotcaptcha_cb,
-    on_badcaptcha    => \&badcaptcha_cb,
     server           => 'bajor.omegle.com',  # don't use this option without reason
     static           => 1,                   # or this one
     topics           => ['IRC', 'Omegle', 'ponies'],
