@@ -103,7 +103,7 @@ sub say {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} eq 'AskQuestion';
+    return if $sess->opt('type') eq 'AskQuestion';
 
     $sess->post('send', [ msg => $msg ]);
 }
@@ -117,7 +117,7 @@ sub type {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} eq 'AskQuestion';
+    return if $sess->opt('type') eq 'AskQuestion';
 
     $sess->post('typing');
 }
@@ -131,7 +131,7 @@ sub stop_typing {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} eq 'AskQuestion';
+    return if $sess->opt('type') eq 'AskQuestion';
 
     $sess->post('stoptyping');
 }
