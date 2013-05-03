@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.82';
+our $VERSION = '4.83';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -47,7 +47,9 @@ sub new {
 sub configure {
     my ($om, %params) = @_;
 
-    foreach (qw|topics question server static no_type|) {
+    $params{type} ||= 'Traditional';
+
+    foreach (qw|topics question server static no_type type|) {
         $om->{opts}{$_} = delete $params{$_} if exists $params{$_};
     }
 
