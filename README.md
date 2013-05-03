@@ -302,6 +302,17 @@ a new captcha.
 $sess->on(bad_captcha => sub { say 'Incorrect captcha. Fetching another...' });
 ```
 
+### session.done()
+
+Fired when the session is complete. This could be due to an error, you disconnecting, or
+a stranger disconnecting. It is fired after the event which caused it (disconnected, etc.)
+and  before deleting the values associated with the session, allowing you to do any
+final cleanups.
+
+```perl
+$sess->on(done => sub { delete $sessions{$sess} });
+```
+
 ### session.error($message)
 
 Fired when the server returns an error. This ends the session, resetting all of its values

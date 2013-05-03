@@ -151,6 +151,7 @@ sub disconnect {
 # clean up after a session ends.
 sub done {
     my $sess = shift;
+    $sess->fire('done');
     $sess->{om}->remove_session($sess) if $sess->{om};
     exists $sess->{$_} && delete $sess->{$_} foreach qw(
         running waiting connected omegle_id typing
