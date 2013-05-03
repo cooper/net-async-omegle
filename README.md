@@ -36,7 +36,24 @@ Net::Async::Omegle uses the EventedObject framework for events. Most events are 
 session objects; however, all events fired on session object are also fired on Omegle
 manager objects with the session object as the first argument. Programatically, you have
 the choice between using a single handler for all sessions or using callbacks specific
-to certain sessions.
+to certain sessions.  
+
+For example, both of these are valid for handling message events.
+```perl
+# This callback is specific to this session.
+$sess->on(stranger_message => sub {
+    my ($event, $message) = @_;
+    say "Stranger said: $message";
+});
+```
+```perl
+# This applies to all sessions in this Omegle manager instance.
+$om->on(stranger_message => sub {
+    my ($event, $sess, $message) = @_;
+    say "Stranger said: $message";
+    # notice that the session is the first event argument.
+});
+```
 
 ### omegle.ready()
 
