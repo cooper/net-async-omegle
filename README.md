@@ -38,16 +38,16 @@ manager objects with the session object as the first argument. Programatically, 
 the choice between using a single handler for all sessions or using callbacks specific
 to certain sessions.  
 
-Both of these are valid for handling message events, for example:  
-*This callback is specific to this session.*
+Both of these are valid for handling message events, for example.
 ```perl
+# This callback is specific to this session.
 $sess->on(stranger_message => sub {
     my ($event, $message) = @_;
     say "Stranger said: $message";
 });
 ```
-*This callback applies to all sessions in this Omegle manager instance.*
 ```perl
+# This applies to all sessions in this Omegle manager instance.
 $om->on(stranger_message => sub {
     my ($event, $sess, $message) = @_;
     say "Stranger said: $message";
