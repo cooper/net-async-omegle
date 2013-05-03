@@ -358,7 +358,7 @@ sub fire {
 # get an option, either from the session or from the Omegle instance.
 sub opt {
     my ($sess, $opt) = @_;
-    $sess->{$opt} || $sess->{om}{$opt}
+    $sess->{$opt} || $sess->{om}{opts}{$opt}
 }
 
 # returns true if the session is running (/start request completed)
