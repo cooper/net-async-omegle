@@ -532,3 +532,18 @@ Returns the name of the server the session is taking place on.
 $sess->on(connect => sub { say 'Found stranger on '.$sess->server });
 ```
 
+### $sess->session_type()
+
+Returns the session type.
+
+* __Traditional__: one-on-one chat with no special features.
+* __CommonInterests__: one-on-one chat with chat topics enabled.
+* __AskQuestion__: spy mode where you are asking the question.
+* __AnswerQuestion__: spy mode where you are answering the question.
+
+```perl
+if ($sess->session_type eq 'AskQuestion') {
+    $sess->{question} = 'What time is it in Paris?';
+}
+```
+

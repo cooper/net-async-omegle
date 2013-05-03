@@ -400,4 +400,9 @@ sub server {
     return shift->{server};
 }
 
+# returns the session type.
+sub session_type {
+    return shift->opt('type');
+}
+
 1
