@@ -15,12 +15,9 @@ You are free to modify and redistribute Net::Async::Omegle under the terms of th
 
 ## variables
 
-Your instance of Net::Async::Omegle will fetch these variables from Omegle every five minutes.
-
-- __$om->{servers}__: if dynamic server select is enabled, this is the list of available Omegle servers as fetched by update().
-- __$om->{lastserver}__: the index of @servers of the last server used.
-
-During a session, your session object will have the following properties.
+Your instance of Net::Async::Omegle, while attached to an IO::Async::Loop, will fetch these variables
+from Omegle every five minutes at the very least. During a session, this information is updated
+almost constantly. You can force an update at any time by calling `$om->update()`.  
 
 - __$sess->{connected}__: true if the session has actually been established.
 - __$sess->{omegle_id}__: your Omegle client ID.
@@ -113,9 +110,17 @@ $om->on(ready => sub {
 
 Returns an array of available Omegle servers.
 
+```perl
+my @servers = $om->servers();
+```
+
 ### $om->last_server()
 
 Returns the name of the last server used (or the current one while a session is running.)
+
+```perl
+my $server = $om->last_server();
+```
 
 ## Omegle session methods
 
