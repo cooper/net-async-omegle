@@ -13,14 +13,6 @@ Mitchell Cooper, <mitchell@notroll.net>
 Feel free to contact me via github's messaging system if you have a question or request.  
 You are free to modify and redistribute Net::Async::Omegle under the terms of the New BSD license. See LICENSE.
 
-## variables
-
-Your instance of Net::Async::Omegle, while attached to an IO::Async::Loop, will fetch these variables
-from Omegle every five minutes at the very least. During a session, this information is updated
-almost constantly. You can force an update at any time by calling `$om->update()`.  
-
-- __$sess->{challenge}__: if there is a pending captcha, this is the reCAPTCHA challenge ID.
-
 ## Options
 
 If you specify options to `$om->new()` (the session constructor), those options will always
@@ -79,6 +71,19 @@ Note: the order of events after calling `->start()` is typically `start`, `waiti
 
 ```perl
 $sess->on(connected => sub { $sess->say('Hi there, Stranger!') })
+```
+
+### session.server_message($message)
+
+Fired when the server notifies you with a piece of text information. This typically is used
+to let you know that the stranger is using a mobile device or other special software. However,
+it may have other uses in the future.
+
+```perl
+$sess->on(server_message => sub {
+    my ($event, $msg) = @_;
+    say "Server says: $msg";
+});
 ```
 
 ## Omegle manager methods
@@ -168,23 +173,7 @@ may be used, but all are optional.
 
 ```perl
 my $sess = $om->new(
-    on_error         => \&error_cb,
-    on_chat          => \&chat_cb,
-    on_type          => \&type_cb,
-    on_stoptype      => \&stoptype_cb,
-    on_disconnect    => \&disconnect_cb,
-    on_connect       => \&connect_cb,
-    on_got_id        => \&got_id_cb,
-    on_commonlikes   => \&commonlikes_cb,
-    on_question      => \&question_cb,
-    on_spydisconnect => \&spydisconnect_cb,
-    on_spytype       => \&spytype_cb,
-    on_spystoptype   => \&spystoptype_cb,
-    on_spychat       => \&spychat_cb,
-    on_wantcaptcha   => \&gotcaptcha_cb,
-    on_gotcaptcha    => \&gotcaptcha_cb,
-    on_badcaptcha    => \&badcaptcha_cb,
-    server           => 'bajor.omegle.com',  # don't use this option without reason
+    server           => 'bajor.omegle.com',  # don't use this option
     static           => 1,                   # or this one
     topics           => ['IRC', 'Omegle', 'ponies'],
     use_likes        => 1,
@@ -196,7 +185,9 @@ my $sess = $om->new(
 ### $sess->start()
 
 Connects to Omegle. This *does not* return the Omegle ID of your session as it does in New::Omegle. It returns true.
-If you need the session ID for whatever reason, use the `on_got_id` event.
+If you need the session ID for whatever reason, use the `on_got_id` event.  
+Note: you should not call this method until you know the Omegle manager is ready.
+The `ready` event will be fired on the Omegle manager when this is the case.
 
 ```perl
 $sess->start();

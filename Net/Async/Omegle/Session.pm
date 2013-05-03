@@ -174,15 +174,16 @@ sub handle_event {
 
         # waiting on a chatting partner.
         when ('waiting') {
-            $sess->fire('waiting');
             $sess->{waiting} = 1;
+            $sess->fire('waiting');
         }
 
         # session established.
         when ('connected') {
+            $sess->{connected} = 1;
+            delete $sess->{waiting};
             $sess->fire('connect');             # compat.
             $sess->fire('connected'); 
-            $sess->{connected} = 1;
         }
 
         # stranger said something.
