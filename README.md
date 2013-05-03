@@ -214,3 +214,31 @@ Submits a response to recaptcha. If incorrect, a new captcha will be presented a
 ```perl
 $sess->submit_captcha('some CAPTCHA');
 ```
+
+### $sess->running()
+
+Returns true if the session is currently running. This does not necessarily mean that
+a conversation is in progress; it merely indicates that a request has been submit to
+start a new conversation. After the session terminates, this method returns false.
+
+```perl
+say 'A session is in progress' if $sess->running();
+```
+
+### $sess->waiting()
+
+Returns true if the session is waiting on a stranger to be paired with. Once a stranger is
+found, this method will return false.
+
+```perl
+say 'Losing my patience...' if $sess->waiting();
+```
+
+### $sess->connected()
+
+Returns true if a session is running and a conversation is in progress. This means that
+a stranger has been found. After the session terminates, this method returns false.
+
+```perl
+say 'Chatting with someone...' if $sess->connected();
+```

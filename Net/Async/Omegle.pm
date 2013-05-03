@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.5';
+our $VERSION = '4.6';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -66,7 +66,10 @@ sub _init {
     # create status update timer
     my $timer = $om->{timer} = IO::Async::Timer::Periodic->new(
         interval => 300,
-        on_tick  => sub { $om->status_update() }
+        on_tick  => sub {
+            return unless time - ($om->{updated} || 0) >= 300;
+            $om->status_update();
+        }
     );
     $om->add_child($timer);
 }

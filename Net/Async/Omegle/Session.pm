@@ -73,6 +73,8 @@ sub start {
         
     });
 
+    $sess->{running} = 1;
+
     return 1;
 }
 
@@ -141,7 +143,7 @@ sub done {
     my $sess = shift;
     $sess->{om}->remove_session($sess) if $sess->{om};
     exists $sess->{$_} && delete $sess->{$_} foreach qw(
-        connected omegle_id typing
+        running waiting connected omegle_id typing
         typing_1 typing_2 type challenge
     );
 }
@@ -343,6 +345,21 @@ sub fire {
 sub opt {
     my ($sess, $opt) = @_;
     $sess->{$opt} || $sess->{om}{$opt}
+}
+
+# returns true if the session is running (/start request completed)
+sub running {
+    return shift->{running};
+}
+
+# returns true if the session is waiting (stranger not yet found)
+sub waiting {
+    return shift->{waiting};
+}
+
+# returns true if the session is connected (stranger found)
+sub connected {
+    return shift->{connected};
 }
 
 1
