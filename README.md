@@ -81,6 +81,21 @@ $om->on(update_user_count => sub {
 });
 ```
 
+### omegle.status_update()
+
+Fired when the Omegle status information is updated. This is fired quite frequently.
+This status information sets the Omegle server list, user count, and several other pieces
+of data.
+
+```perl
+$om->on(status_update => sub {
+    my @servers = $om->servers;
+    say "Available servers: @servers\n";
+});
+```
+
+Note: this should not be used for user count updates as `update_user_count` is more reliable.
+
 ### session.start()
 
 Fired when the session is started. At this point, a stranger has not been found. This
@@ -130,6 +145,29 @@ $sess->on(connected => sub { $sess->say('Hi there, Stranger!') });
 
 Note: the order of events after calling `->start()` is typically `start`, `got_id`, `waiting`, `connected`.
 
+### session.common_interests(@interests)
+
+```perl
+$sess->on(common_interests => sub {
+    my ($event, @interests) = @_;
+    say "You and the stranger have in common: @interests";
+});
+```
+
+Note: the arguments of this event are in array form, not an array reference.
+
+### session.question($question)
+
+Fired when the question is received in ask and answer modes. This is fired even if you
+are the one asking the question.
+
+```perl
+$session->on(question => sub {
+    my ($event, $question) = @_;
+    say "Question up for discussion: $question";
+});
+```
+
 ### session.server_message($message)
 
 Fired when the server notifies you with a piece of text information. This typically is used
@@ -139,9 +177,151 @@ it may have other uses in the future.
 ```perl
 $sess->on(server_message => sub {
     my ($event, $msg) = @_;
-    say "Server says: $msg";
+    say "Server: $msg";
 });
 ```
+
+## session.typing()
+
+Fired when the stranger begins typing. After being fired, `$sess->stranger_typing` becomes
+true.
+
+```perl
+$sess->on(typing => sub {
+    say 'Stranger is typing...';
+});
+```
+
+## session.stopped_typing()
+
+Fired when the stranger stops typing. After being fired, `$sess->stranger_typing` becomes
+false.
+
+```perl
+$sess->on(stop_typing => sub {
+    say 'Stranger is typing...';
+});
+```
+
+Note: this event is not fired when a stranger sends a message (which also terminates typing.)
+
+## session.message($message)
+
+Fired when the stranger sends a message. After being fired, `$sess->stranger_typing` resets
+to a false value.
+
+```perl
+$sess->on(message => sub {
+    my ($event, $msg) = @_;
+    say "Stranger: $message";
+});
+```
+
+## session.disconnected()
+
+Fired when the stranger disconnects from the conversation. This ends the session, resetting
+all of its values to their defaults.
+
+```perl
+$sess->on(disconnected => sub { say 'Your conversational partner has disconnected.' });
+```
+
+## session.spy_typing($which)
+
+Fired when a stranger in ask/answer mode begins typing. After being fired,
+`$sess->stranger_typing($which)` becomes true.
+
+```perl
+$sess->on(spy_typing => sub {
+    my ($event, $which) = @_;
+    say "Stranger $which is typing...";
+});
+```
+
+## session.spy_stopped_typing($which)
+
+Fired when a stranger in ask/answer mode stops typing. After being fired,
+`$sess->stranger_typing($which)` becomes false.
+
+```perl
+$sess->on(spy_stop_typing => sub {
+    my ($event, $which) = @_;
+    say 'Stranger $which is typing...';
+});
+```
+
+Note: this event is not fired when a stranger sends a message (which also terminates typing.)
+
+## session.spy_message($which, $message)
+
+Fired when a stranger in ask/answer mode sends a message. After being fired,
+`$sess->stranger_typing($which)` resets to a false value.
+
+```perl
+$sess->on(spy_message => sub {
+    my ($event, $which, $msg) = @_;
+    say "Stranger $which: $message";
+});
+```
+
+## session.spy_disconnected($which)
+
+Fired when a stranger in ask/answer mode disconnects from the conversation.
+This ends the session, resetting all of its values to their defaults.
+
+```perl
+$sess->on(spy_disconnected => sub { say 'Your conversational partner #'.$_[1].' has disconnected.' });
+```
+
+## session.captcha_required($challenge)
+
+Fired when the server requests that a captcha be submitted. Net::Async::Omegle will
+automatically request a captcha and fire `captcha` afterwards.
+
+```perl
+$sess->on(captcha_required => sub { say 'Fetching captcha...' });
+```
+
+## session.captcha($url)
+
+Fired when a captcha image address is fetched.
+
+```perl
+$sess->on(captcha => sub {
+    my ($event, $url) = @_;
+    say "Please verify that you are human: $url";
+});
+```
+
+## session.bad_captcha()
+
+Fired when a captcha submission is denied. Net::Async::Omegle will automatically request
+a new captcha.
+
+```perl
+$sess->on(bad_captcha => sub { say 'Incorrect captcha. Fetching another...' });
+```
+
+## session.error($message)
+
+Fired when the server returns an error. This ends the session, resetting all of its values
+to their defaults.
+
+```perl
+$sess->on(error => sub {
+    my ($event, $message) = @_;
+    say "Omegle error: $message";
+});
+```
+
+### session.raw_*([@arguments])
+
+raw_* events are fired for each raw Omegle event. Typically, you do not want to handle
+these directly and should use the several other convenient events provided.
+
+### session.debug($message)
+
+Log events are fired for debugging purposes.
 
 ## Omegle manager methods
 

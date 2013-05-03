@@ -183,40 +183,37 @@ sub handle_event {
         when ('connected') {
             $sess->{connected} = 1;
             delete $sess->{waiting};
-            $sess->fire('connect');             # compat.
             $sess->fire('connected'); 
         }
 
         # stranger said something.
         when ('gotMessage') {
-            $sess->fire(chat    => $event[0]); # compat.
             $sess->fire(message => $event[0]);
             delete $sess->{typing};
         }
 
         # stranger disconnected.
         when ('strangerDisconnected') {
-            $sess->fire('disconnect');
+            $sess->fire('disconnected');
             $sess->done;
         }
 
         # stranger is typing.
         when ('typing') {
             continue if $sess->opt('no_type');
-            $sess->fire('type') unless $sess->{typing};
-            $sess->{typing} = 1;
+            $sess->fire('typing') unless $sess->{typing};
         }
 
         # stranger stopped typing.
         when ('stoppedTyping') {
             continue if $sess->opt('no_type');
-            $sess->fire('stoptype') if $sess->{typing};
+            $sess->fire('stopped_typing') if $sess->{typing};
             delete $sess->{typing};
         }
 
         # stranger has similar interests.
         when ('commonLikes') {
-            $sess->fire(commonlikes => $event[0]);
+            $sess->fire(common_interests => @{$event[0]});
         }
 
         # question is asked.
@@ -228,7 +225,7 @@ sub handle_event {
         when ('spyDisconnected') {
             my $which = $event[0];
             $which =~ s/Stranger //;
-            $sess->fire(spydisconnect => $which);
+            $sess->fire(spy_disconnected => $which);
             $sess->done;
         }
 
@@ -237,7 +234,7 @@ sub handle_event {
             continue if $sess->opt('no_type');
             my $which = $event[0];
             $which =~ s/Stranger //;
-            $sess->fire(spytype => $which) unless $sess->{"typing_$which"};
+            $sess->fire(spy_typing => $which) unless $sess->{"typing_$which"};
             $sess->{"typing_$which"} = 1;
         }
 
@@ -246,7 +243,7 @@ sub handle_event {
             continue if $sess->opt('no_type');
             my $which = $event[0];
             $which =~ s/Stranger //;
-            $sess->fire(spystoptype => $which) if $sess->{"typing_$which"};
+            $sess->fire(spy_stopped_typing => $which) if $sess->{"typing_$which"};
             delete $sess->{"typing_$which"};
         }
 
@@ -254,7 +251,7 @@ sub handle_event {
         when ('spyMessage') {
             my $which = $event[0];
             $which =~ s/Stranger //;
-            $sess->fire(spychat => $which, $event[1]);
+            $sess->fire(spy_message => $which, $event[1]);
             delete $sess->{"typing_$which"};
         }
 
@@ -278,13 +275,13 @@ sub handle_event {
 
         # captcha was rejected.
         when ('recaptchaRejected') {
-            $sess->fire('badcaptcha');
+            $sess->fire('bad_captcha');
             continue;
         }
 
         # server requests captcha.
         when (['recaptchaRequired', 'recaptchaRejected']) {
-            $sess->fire(wantcaptcha => $event[0]);
+            $sess->fire(captcha_required => $event[0]);
 
             # ask reCAPTCHA for an image.
             $om->get("http://google.com/recaptcha/api/challenge?k=$event[0]&ajax=1", sub {
@@ -293,7 +290,7 @@ sub handle_event {
                 $sess->{challenge} = $1;
 
                 # got it; fire the callback.
-                $sess->fire(gotcaptcha => "http://www.google.com/recaptcha/api/image?c=$1");
+                $sess->fire(captcha => "http://www.google.com/recaptcha/api/image?c=$1");
             });
         }
 
