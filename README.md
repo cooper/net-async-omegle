@@ -67,32 +67,51 @@ $om->on(update_user_count => sub {
 ### session.start()
 
 Fired when the session is started. At this point, a stranger has not been found. This
-merely indicates that the start request has been submitted. After this is called,
+merely indicates that the start request has been submitted. After this is fired,
 `$sess->running()` will return true until the session ends.
 
 ```perl
 $sess->on(start => sub { say 'Session '.$sess->id.' started.' });
 ```
 
+Note: the order of events after calling `->start()` is typically `start`, `got_id`, `waiting`, `connected`.
+
+### session.got_id($id)
+
+Fired when the Omegle session identifier is received. After this is fired, `$sess->id`
+will contain the session identifier until the session terminates.
+
+```perl
+$sess->on(got_id => sub {
+    my ($event, $id) = @_;
+    say 'My ID is: '.$id;
+});
+```
+
+Note: the order of events after calling `->start()` is typically `start`, `got_id`, `waiting`, `connected`.
+
 ### session.waiting()
 
 Fired when the session is waiting for a chatting partner to connect. This is fired
-after `start` and before `connected`. After this is called, `$sess->waiting()` will return
+after `start` and before `connected`. After this is fired, `$sess->waiting()` will return
 true until a stranger is found.
 
 ```perl
 $sess->on(waiting => sub { say 'Waiting on a stranger...' });
 ```
 
+Note: the order of events after calling `->start()` is typically `start`, `got_id`, `waiting`, `connected`.
+
 ### session.connected()
 
-Fired when a stranger is found and a conversation begins. After this is called, `$sess->connected()`
-will return true until the conversation ends.  
-Note: the order of events after calling `->start()` is typically `start`, `waiting`, `connected`.
+Fired when a stranger is found and a conversation begins. After this is fired, `$sess->connected()`
+will return true until the conversation ends.
 
 ```perl
 $sess->on(connected => sub { $sess->say('Hi there, Stranger!') });
 ```
+
+Note: the order of events after calling `->start()` is typically `start`, `got_id`, `waiting`, `connected`.
 
 ### session.server_message($message)
 
