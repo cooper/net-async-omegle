@@ -156,8 +156,10 @@ sub handle_event {
     # fire debug event.
     $sess->fire(debug => 'EVENT: '.$event_name.q[(].join(', ', @event).q[)]);
 
-    given ($event_name) {
+    # fire a raw event.
+    $sess->fire("raw_$event_name" => @event);
 
+    given ($event_name) {
 
         # status info update.
         when ('statusInfo') {
@@ -178,13 +180,14 @@ sub handle_event {
 
         # session established.
         when ('connected') {
-            $sess->fire('connect');
+            $sess->fire('connect');             # compat.
+            $sess->fire('connected'); 
             $sess->{connected} = 1;
         }
 
         # stranger said something.
         when ('gotMessage') {
-            $sess->fire(chat    => $event[0]); # compat...
+            $sess->fire(chat    => $event[0]); # compat.
             $sess->fire(message => $event[0]);
             delete $sess->{typing};
         }
@@ -259,7 +262,10 @@ sub handle_event {
         # for that reason, we will continue to handle it.
         when ('count') {
             $om->{online} = $event[0];
-            $sess->fire(count => $event[0]);
+            
+            # we fire this on the Omegle instance.
+            $sess->{om}->fire(update_user_count => $event[0]);
+            
         }
 
         # an error has occured, and the session must end.
@@ -276,7 +282,7 @@ sub handle_event {
 
         # server requests captcha.
         when (['recaptchaRequired', 'recaptchaRejected']) {
-            $sess->fire('wantcaptcha');
+            $sess->fire(wantcaptcha => $event[0]);
 
             # ask reCAPTCHA for an image.
             $om->get("http://google.com/recaptcha/api/challenge?k=$event[0]&ajax=1", sub {

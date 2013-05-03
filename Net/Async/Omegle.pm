@@ -143,6 +143,7 @@ sub _update_status {
     
     # fire the generic status update event.
     $om->fire('status_update');
+    $om->fire(update_user_count => $data->{count});
     
     # fire ready event if we haven't already.
     if (!$om->{fired_ready}) {

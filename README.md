@@ -38,6 +38,49 @@ object will always be the first argument of all callbacks.
  to 'Traditional'
 - __mobile__: true if you wish to identify as connecting from a mobile device
 
+## Events
+
+Net::Async::Omegle uses the EventedObject framework for events. Most events are fired on
+session objects; however, all events fired on session object are also fired on Omegle
+manager objects with the session object as the first argument. Programatically, you have
+the choice between using a single handler for all sessions or using callbacks specific
+to certain sessions.
+
+### omegle.ready()
+
+Fired when the first Omegle status update completes. You must wait for this event to be
+called before starting any conversations. This ensures that the available Omegle servers
+have been fetched in advance.
+
+```perl
+my $sess = $om->new();
+$om->on(ready => sub {
+    $sess->start();
+});
+```
+
+### omegle.update_user_count($user_count)
+
+Fired when the user count is updated.  
+Note: this is fired immediately after `status_update`, but it is more reliable for user
+count because the user count may also be updated by an Omegle conversation event.
+
+```perl
+$om->on(update_user_count => sub {
+    my ($event, $count) = @_;
+    say "There are now $count users online.";
+});
+```
+
+### session.connected()
+
+Fired when a stranger is found and a conversation begins.  
+Note: the order of events after calling `->start()` is typically `start`, `waiting`, `connected`.
+
+```perl
+$sess->on(connected => sub { $sess->say('Hi there, Stranger!') })
+```
+
 ## Omegle manager methods
 
 ### $om = Net::Async::Omegle->new(%options)
