@@ -33,21 +33,21 @@ object will always be the first argument of all callbacks.
 ## Events
 
 Net::Async::Omegle uses the EventedObject framework for events. Most events are fired on
-session objects; however, all events fired on session object are also fired on Omegle
+session objects; however, all events fired on session objects are also fired on Omegle
 manager objects with the session object as the first argument. Programatically, you have
 the choice between using a single handler for all sessions or using callbacks specific
 to certain sessions.  
 
-For example, both of these are valid for handling message events.
+Both of these are valid for handling message events, for example:  
+*This callback is specific to this session.*
 ```perl
-# This callback is specific to this session.
 $sess->on(stranger_message => sub {
     my ($event, $message) = @_;
     say "Stranger said: $message";
 });
 ```
+*This callback applies to all sessions in this Omegle manager instance.*
 ```perl
-# This applies to all sessions in this Omegle manager instance.
 $om->on(stranger_message => sub {
     my ($event, $sess, $message) = @_;
     say "Stranger said: $message";
