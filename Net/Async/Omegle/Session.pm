@@ -86,8 +86,8 @@ sub start {
 # $sess->submit_captcha($solution)
 # submit recaptcha request.
 sub submit_captcha {
-    return unless $sess->{running};
     my ($sess, $response) = @_;
+    return unless $sess->{running};
     $sess->post('recaptcha', [
         challenge => $sess->{challenge},
         response  => $response
@@ -103,7 +103,7 @@ sub say {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} == 'AskQuestion';
+    return if $sess->{type} eq 'AskQuestion';
 
     $sess->post('send', [ msg => $msg ]);
 }
@@ -117,7 +117,7 @@ sub type {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} == 'AskQuestion';
+    return if $sess->{type} eq 'AskQuestion';
 
     $sess->post('typing');
 }
@@ -131,7 +131,7 @@ sub stop_typing {
     return unless $sess->{connected};
 
     # spying session; can't talk
-    return if $sess->{type} == 'AskQuestion';
+    return if $sess->{type} eq 'AskQuestion';
 
     $sess->post('stoptyping');
 }
