@@ -181,7 +181,7 @@ $sess->on(server_message => sub {
 });
 ```
 
-## session.typing()
+### session.typing()
 
 Fired when the stranger begins typing. After being fired, `$sess->stranger_typing` becomes
 true.
@@ -192,7 +192,7 @@ $sess->on(typing => sub {
 });
 ```
 
-## session.stopped_typing()
+### session.stopped_typing()
 
 Fired when the stranger stops typing. After being fired, `$sess->stranger_typing` becomes
 false.
@@ -205,7 +205,7 @@ $sess->on(stop_typing => sub {
 
 Note: this event is not fired when a stranger sends a message (which also terminates typing.)
 
-## session.message($message)
+### session.message($message)
 
 Fired when the stranger sends a message. After being fired, `$sess->stranger_typing` resets
 to a false value.
@@ -217,7 +217,7 @@ $sess->on(message => sub {
 });
 ```
 
-## session.disconnected()
+### session.disconnected()
 
 Fired when the stranger disconnects from the conversation. This ends the session, resetting
 all of its values to their defaults.
@@ -226,7 +226,7 @@ all of its values to their defaults.
 $sess->on(disconnected => sub { say 'Your conversational partner has disconnected.' });
 ```
 
-## session.spy_typing($which)
+### session.spy_typing($which)
 
 Fired when a stranger in ask/answer mode begins typing. After being fired,
 `$sess->stranger_typing($which)` becomes true.
@@ -238,7 +238,7 @@ $sess->on(spy_typing => sub {
 });
 ```
 
-## session.spy_stopped_typing($which)
+### session.spy_stopped_typing($which)
 
 Fired when a stranger in ask/answer mode stops typing. After being fired,
 `$sess->stranger_typing($which)` becomes false.
@@ -252,7 +252,7 @@ $sess->on(spy_stop_typing => sub {
 
 Note: this event is not fired when a stranger sends a message (which also terminates typing.)
 
-## session.spy_message($which, $message)
+### session.spy_message($which, $message)
 
 Fired when a stranger in ask/answer mode sends a message. After being fired,
 `$sess->stranger_typing($which)` resets to a false value.
@@ -264,7 +264,7 @@ $sess->on(spy_message => sub {
 });
 ```
 
-## session.spy_disconnected($which)
+### session.spy_disconnected($which)
 
 Fired when a stranger in ask/answer mode disconnects from the conversation.
 This ends the session, resetting all of its values to their defaults.
@@ -273,7 +273,7 @@ This ends the session, resetting all of its values to their defaults.
 $sess->on(spy_disconnected => sub { say 'Your conversational partner #'.$_[1].' has disconnected.' });
 ```
 
-## session.captcha_required($challenge)
+### session.captcha_required($challenge)
 
 Fired when the server requests that a captcha be submitted. Net::Async::Omegle will
 automatically request a captcha and fire `captcha` afterwards.
@@ -282,7 +282,7 @@ automatically request a captcha and fire `captcha` afterwards.
 $sess->on(captcha_required => sub { say 'Fetching captcha...' });
 ```
 
-## session.captcha($url)
+### session.captcha($url)
 
 Fired when a captcha image address is fetched.
 
@@ -293,7 +293,7 @@ $sess->on(captcha => sub {
 });
 ```
 
-## session.bad_captcha()
+### session.bad_captcha()
 
 Fired when a captcha submission is denied. Net::Async::Omegle will automatically request
 a new captcha.
@@ -302,7 +302,7 @@ a new captcha.
 $sess->on(bad_captcha => sub { say 'Incorrect captcha. Fetching another...' });
 ```
 
-## session.error($message)
+### session.error($message)
 
 Fired when the server returns an error. This ends the session, resetting all of its values
 to their defaults.
