@@ -148,29 +148,30 @@ sub done {
 
 # handle an event from Omegle.
 sub handle_event {
-    my ($sess, $event, @event_args) = @_;
+    my ($sess, $event_name, @event) = @_;
     my $om = $sess->{om} or return;
 
     # fire debug event.
-    $sess->fire(debug => 'EVENT: '.$event.q[(].join(', ', @event_args).q[)]);
+    $sess->fire(debug => 'EVENT: '.$event_name.q[(].join(', ', @event).q[)]);
 
-    given ($event) {
+    given ($event_name) {
 
 
         # status info update.
         when ('statusInfo') {
-            $sess->{om}->_update_status($event_args[0]);
+            $sess->{om}->_update_status($event[0]);
             # status_update called later.
         }
 
         # message from server.
         when ('serverMessage') {
-            # TODO.
+            $sess->fire(server_message => $event[0]);
         }
 
         # waiting on a chatting partner.
         when ('waiting') {
-            # TODO.
+            $sess->fire('waiting');
+            $sess->{waiting} = 1;
         }
 
         # session established.
@@ -181,7 +182,8 @@ sub handle_event {
 
         # stranger said something.
         when ('gotMessage') {
-            $sess->fire(chat => $event_args[0]);
+            $sess->fire(chat    => $event[0]); # compat...
+            $sess->fire(message => $event[0]);
             delete $sess->{typing};
         }
 
@@ -207,17 +209,17 @@ sub handle_event {
 
         # stranger has similar interests.
         when ('commonLikes') {
-            $sess->fire(commonlikes => $event_args[0]);
+            $sess->fire(commonlikes => $event[0]);
         }
 
         # question is asked.
         when ('question') {
-            $sess->fire(question => $event_args[0]);
+            $sess->fire(question => $event[0]);
         }
 
         # spyee disconnected.
         when ('spyDisconnected') {
-            my $which = $event_args[0];
+            my $which = $event[0];
             $which =~ s/Stranger //;
             $sess->fire(spydisconnect => $which);
             $sess->done;
@@ -226,7 +228,7 @@ sub handle_event {
         # spyee is typing.
         when ('spyTyping') {
             continue if $sess->opt('no_type');
-            my $which = $event_args[0];
+            my $which = $event[0];
             $which =~ s/Stranger //;
             $sess->fire(spytype => $which) unless $sess->{"typing_$which"};
             $sess->{"typing_$which"} = 1;
@@ -235,7 +237,7 @@ sub handle_event {
         # spyee stopped typing.
         when ('spyStoppedTyping') {
             continue if $sess->opt('no_type');
-            my $which = $event_args[0];
+            my $which = $event[0];
             $which =~ s/Stranger //;
             $sess->fire(spystoptype => $which) if $sess->{"typing_$which"};
             delete $sess->{"typing_$which"};
@@ -243,9 +245,9 @@ sub handle_event {
 
         # spyee said something.
         when ('spyMessage') {
-            my $which = $event_args[0];
+            my $which = $event[0];
             $which =~ s/Stranger //;
-            $sess->fire(spychat => $which, $event_args[1]);
+            $sess->fire(spychat => $which, $event[1]);
             delete $sess->{"typing_$which"};
         }
 
@@ -254,13 +256,13 @@ sub handle_event {
         # however, Omegle appears to still send it under certain circumstances.
         # for that reason, we will continue to handle it.
         when ('count') {
-            $om->{online} = $event_args[0];
-            $sess->fire(count => $event_args[0]);
+            $om->{online} = $event[0];
+            $sess->fire(count => $event[0]);
         }
 
         # an error has occured, and the session must end.
         when ('error') {
-            $sess->fire(error => $event_args[0]);
+            $sess->fire(error => $event[0]);
             $sess->done;
         }
 
@@ -275,7 +277,7 @@ sub handle_event {
             $sess->fire('wantcaptcha');
 
             # ask reCAPTCHA for an image.
-            $om->get("http://google.com/recaptcha/api/challenge?k=$event_args[0]&ajax=1", sub {
+            $om->get("http://google.com/recaptcha/api/challenge?k=$event[0]&ajax=1", sub {
                 my $data = shift;
                 return unless $data =~ m/challenge : '(.+)'/;
                 $sess->{challenge} = $1;
@@ -287,7 +289,7 @@ sub handle_event {
 
         # other
         default {
-            $sess->fire(debug => "unknown event: $event");
+            $sess->fire(debug => "unknown event: $event_name");
         }
 
     }

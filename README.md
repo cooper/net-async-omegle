@@ -109,6 +109,14 @@ $om->on(ready => sub {
 });
 ```
 
+### $om->servers()
+
+Returns an array of available Omegle servers.
+
+### $om->last_server()
+
+Returns the name of the last server used (or the current one while a session is running.)
+
 ## Omegle session methods
 
 ### $sess = $om->new(%options)

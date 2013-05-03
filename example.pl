@@ -14,7 +14,6 @@ my $loop = IO::Async::Loop->new;
 $loop->add($om);
 $om->init;
 
-
 # create a session.
 my $sess = $om->new();
 $sess->on(debug => sub { say "@_" });

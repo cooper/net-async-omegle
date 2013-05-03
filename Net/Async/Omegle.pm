@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.4';
+our $VERSION = '4.5';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -172,6 +172,20 @@ sub user_count {
     my $om = shift;
     return my @a = ($om->{online} || 0, $om->{updated}) if wantarray; 
     return $om->{online} || 0;
+}
+
+# returns an array of available servers.
+sub servers {
+    my $om = shift;
+    return @{$om->{servers}} if $om->{servers};
+    return my @a;
+}
+
+# returns the name of the last server used.
+sub last_server {
+    my $om = shift;
+    return if !defined $om->{lastserver};
+    return $om->{servers}[$om->{lastserver}];
 }
 
 1
