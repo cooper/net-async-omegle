@@ -74,6 +74,7 @@ sub start {
     });
 
     $sess->{running} = 1;
+    $sess->fire('start');
 
     return 1;
 }

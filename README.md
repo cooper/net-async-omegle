@@ -64,13 +64,34 @@ $om->on(update_user_count => sub {
 });
 ```
 
+### session.start()
+
+Fired when the session is started. At this point, a stranger has not been found. This
+merely indicates that the start request has been submitted. After this is called,
+`$sess->running()` will return true until the session ends.
+
+```perl
+$sess->on(start => sub { say 'Session '.$sess->id.' started.' });
+```
+
+### session.waiting()
+
+Fired when the session is waiting for a chatting partner to connect. This is fired
+after `start` and before `connected`. After this is called, `$sess->waiting()` will return
+true until a stranger is found.
+
+```perl
+$sess->on(waiting => sub { say 'Waiting on a stranger...' });
+```
+
 ### session.connected()
 
-Fired when a stranger is found and a conversation begins.  
+Fired when a stranger is found and a conversation begins. After this is called, `$sess->connected()`
+will return true until the conversation ends.  
 Note: the order of events after calling `->start()` is typically `start`, `waiting`, `connected`.
 
 ```perl
-$sess->on(connected => sub { $sess->say('Hi there, Stranger!') })
+$sess->on(connected => sub { $sess->say('Hi there, Stranger!') });
 ```
 
 ### session.server_message($message)
