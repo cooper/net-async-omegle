@@ -19,12 +19,6 @@ Your instance of Net::Async::Omegle, while attached to an IO::Async::Loop, will 
 from Omegle every five minutes at the very least. During a session, this information is updated
 almost constantly. You can force an update at any time by calling `$om->update()`.  
 
-- __$sess->{connected}__: true if the session has actually been established.
-- __$sess->{omegle_id}__: your Omegle client ID.
-- __$sess->{typing}__: true if the stranger is typing.
-- __$sess->{typing_1}__: true if Stranger 1 in spy mode is typing.
-- __$sess->{typing_2}__: true if Stranger 2 in spy mode is typing.
-- __$sess->{server}__: the Omegle server this session is connected to.
 - __$sess->{challenge}__: if there is a pending captcha, this is the reCAPTCHA challenge ID.
 
 ## Options
@@ -242,3 +236,39 @@ a stranger has been found. After the session terminates, this method returns fal
 ```perl
 say 'Chatting with someone...' if $sess->connected();
 ```
+
+### $sess->id()
+
+Returns the Omegle session identifier or `undef` if it has not yet been received.  
+Note: the session identifier can be obtained when it is received with the `got_id` event.
+
+```perl
+$sess->on(connect => sub {
+    say 'Conversation (ID: '.$sess->id.') started.';
+});
+```
+
+### $sess->stranger_typing()
+
+Returns true if the stranger is currently typing. In a mode with multiple strangers,
+this method returns true if either of the two strangers are typing.
+
+```perl
+$sess->on(type => sub {
+    my $timer = IO::Async::Timer::Countdown->new(
+        delay     => 10,
+        on_expire => sub { say 'This guy types slow.' if $sess->stranger_typing }
+    );
+    $timer->start;
+    $loop->add($timer);
+}));
+```
+
+### $sess->server()
+
+Returns the name of the server the session is taking place on.
+
+```perl
+$sess->on(connect => sub { say 'Found stranger on '.$sess->server });
+```
+

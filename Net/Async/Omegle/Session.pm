@@ -362,4 +362,25 @@ sub connected {
     return shift->{connected};
 }
 
+# returns the omegle session identifier.
+sub id {
+    return shift->{omegle_id};
+}
+
+# compat.
+sub omegle_id;
+*omegle_id = *id;
+
+# returns true if the stranger is typing.
+# in ask/answer modes, returns true if either stranger is typing.
+sub stranger_typing {
+    my $sess = shift;
+    return $sess->{typing} || $sess->{typing_1} || $sess->{typing_2} || undef;
+}
+
+# returns the server this session is taking place on.
+sub server {
+    return shift->{server};
+}
+
 1
