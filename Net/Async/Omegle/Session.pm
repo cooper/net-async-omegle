@@ -88,6 +88,7 @@ sub start {
 sub submit_captcha {
     my ($sess, $response) = @_;
     return unless $sess->{running};
+    delete $sess->{waiting_for_captcha};
     $sess->post('recaptcha', [
         challenge => $sess->{challenge},
         response  => $response
