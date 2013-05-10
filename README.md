@@ -558,3 +558,15 @@ if ($sess->session_type eq 'AskQuestion') {
 }
 ```
 
+### $sess->waiting_for_captcha()
+
+Returns true if the server is waiting on a captcha response.
+
+```perl
+if ($sess->waiting_for_captcha) {
+    say 'Already sent captcha response';
+}
+else {
+    $sess->submit_captcha('homeboy 2378');
+}
+```

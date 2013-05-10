@@ -1,5 +1,5 @@
 ########################################
-  package  Net::Async::Omegle          #
+  package   Net::Async::Omegle         #
 # ------------------------------------ #
 # A clean, non-blocking Perl interface #
 # to Omegle.com for the IO::Async.     #
@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.9';
+our $VERSION = '4.91';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)

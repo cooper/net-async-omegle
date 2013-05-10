@@ -1,5 +1,5 @@
 ########################################
-  package  Net::Async::Omegle::Session #
+  package Net::Async::Omegle::Session  #
 # ------------------------------------ #
 # A clean, non-blocking Perl interface #
 # to Omegle.com for the IO::Async.     #
@@ -155,7 +155,7 @@ sub done {
     $sess->{om}->remove_session($sess) if $sess->{om};
     exists $sess->{$_} && delete $sess->{$_} foreach qw(
         running waiting connected omegle_id typing
-        typing_1 typing_2 type challenge
+        typing_1 typing_2 type challenge waiting_for_captcha
     );
 }
 
@@ -191,6 +191,7 @@ sub handle_event {
 
         # session established.
         when ('connected') {
+            delete $sess->{waiting_for_captcha};
             $sess->{connected} = 1;
             delete $sess->{waiting};
             $sess->fire('connected'); 
@@ -291,6 +292,8 @@ sub handle_event {
 
         # server requests captcha.
         when (['recaptchaRequired', 'recaptchaRejected']) {
+            $sess->{waiting_for_captcha} = 1;
+            
             $sess->fire(captcha_required => $event[0]);
 
             # ask reCAPTCHA for an image.
@@ -380,6 +383,11 @@ sub connected {
 # returns the omegle session identifier.
 sub id {
     return shift->{omegle_id};
+}
+
+# returns whether the server is waiting on a captcha response.
+sub waiting_for_captcha {
+    return shift->{waiting_for_captcha};
 }
 
 # compat.
