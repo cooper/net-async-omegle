@@ -13,7 +13,7 @@
 use warnings;
 use strict;
 use 5.010;
-use parent 'EventedObject';
+use parent 'Evented::Object';
 
 use URI::Escape::XS 'encodeURIComponent';
 

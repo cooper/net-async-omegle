@@ -11,10 +11,10 @@
 
 use warnings;
 use strict;
-use parent qw(IO::Async::Notifier EventedObject); # notifier must be first for SUPER.
+use parent qw(IO::Async::Notifier Evented::Object); # notifier must be first for SUPER.
 use 5.010;
 
-use EventedObject;
+use Evented::Object;
 
 use IO::Async::Timer::Periodic;
 use Net::Async::HTTP;
@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.92';
+our $VERSION = '4.93';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)

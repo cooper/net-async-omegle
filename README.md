@@ -5,7 +5,8 @@ typing, stopped typing, connects, disconnects, and more. Using IO::Async and Net
 be placed easily in many programs. Recently, support has been added for Omegle's reCAPTCHA API and many other new features such as the
 common interests system, spying sessions, and question (spy) modes.  
   
-As of version 4.2, Net::Async::Omegle depends on EventedObject, located at http://github.com/cooper/evented-object.
+As of version 4.2, Net::Async::Omegle depends on Evented::Object, located at http://github.com/cooper/evented-object.  
+Evented::Object is also available on [CPAN](http://search.cpan.org/perldoc?Evented::Object).
 
 ## Author
 
@@ -32,7 +33,7 @@ object will always be the first argument of all callbacks.
 
 ## Events
 
-Net::Async::Omegle uses the EventedObject framework for events. Most events are fired on
+Net::Async::Omegle uses the Evented::Object framework for events. Most events are fired on
 session objects; however, all events fired on session objects are also fired on Omegle
 manager objects with the session object as the first argument. Programatically, you have
 the choice between using a single handler for all sessions or using callbacks specific
