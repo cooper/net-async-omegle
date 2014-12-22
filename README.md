@@ -369,6 +369,11 @@ my ($user_count, $update_time) = $om->user_count;
 say "$user_count users online as of ", scalar localtime $update_time;
 ```
 
+### $om->half_banned()
+
+Returns whether your client has been forced into unmonitored mode.
+This occurs when your behavior is too sexual.
+
 ### $om->update()
 
 Updates Omegle status information. This must be called initially after adding the Omegle

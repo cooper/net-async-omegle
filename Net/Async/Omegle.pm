@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '4.93';
+our $VERSION = '4.94';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -139,6 +139,7 @@ sub _update_status {
     $om->{servers}    = $data->{servers};
     $om->{lastserver} = $#{$data->{servers}};
     $om->{online}     = $data->{count};
+    $om->{toosexy}    = $data->{force_unmon};
     $om->{updated}    = time;
     
     # fire the generic status update event.
@@ -177,6 +178,9 @@ sub user_count {
     return my @a = ($om->{online} || 0, $om->{updated}) if wantarray; 
     return $om->{online} || 0;
 }
+
+# returns whether the user has been forced into the unmonitored section.
+sub half_banned { shift->{toosexy} }
 
 # returns an array of available servers.
 sub servers {
