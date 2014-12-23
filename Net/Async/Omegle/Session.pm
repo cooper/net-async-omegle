@@ -326,7 +326,7 @@ sub handle_events {
     return unless $data =~ m/^\[/;
 
     # event JSON
-    $sess->fire_event(debug_raw => $data);
+    $sess->fire(debug_raw => $data);
     my $events = JSON::decode_json($data);
     $sess->handle_event(@$_) foreach @$events;
 
