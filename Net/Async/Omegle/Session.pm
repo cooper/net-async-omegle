@@ -160,175 +160,18 @@ sub done {
     );
 }
 
-# handle an event from Omegle.
-sub handle_event {
-    my ($sess, $event_name, @event) = @_;
-    my $om = $sess->{om} or return;
-
-    # fire debug event.
-    $sess->fire(debug => 'EVENT: '.$event_name.q[(].join(', ', @event).q[)]);
-
-    # fire a raw event.
-    $sess->fire("raw_$event_name" => @event);
-
-    given ($event_name) {
-
-        # status info update.
-        when ('statusInfo') {
-            $sess->{om}->_update_status($event[0]);
-            # status_update called later.
-        }
-
-        # message from server.
-        when ('serverMessage') {
-            $sess->fire(server_message => $event[0]);
-        }
-
-        # waiting on a chatting partner.
-        when ('waiting') {
-            $sess->{waiting} = 1;
-            $sess->fire('waiting');
-        }
-
-        # session established.
-        when ('connected') {
-            delete $sess->{waiting_for_captcha};
-            $sess->{connected} = 1;
-            delete $sess->{waiting};
-            $sess->fire('connected'); 
-        }
-
-        # stranger said something.
-        when ('gotMessage') {
-            $sess->fire(message => $event[0]);
-            delete $sess->{typing};
-        }
-
-        # stranger disconnected.
-        when ('strangerDisconnected') {
-            $sess->fire('disconnected');
-            $sess->done;
-        }
-
-        # stranger is typing.
-        when ('typing') {
-            continue if $sess->opt('no_type');
-            $sess->fire('typing') unless $sess->{typing};
-        }
-
-        # stranger stopped typing.
-        when ('stoppedTyping') {
-            continue if $sess->opt('no_type');
-            $sess->fire('stopped_typing') if $sess->{typing};
-            delete $sess->{typing};
-        }
-
-        # stranger has similar interests.
-        when ('commonLikes') {
-            $sess->fire(common_interests => @{$event[0]});
-        }
-
-        # question is asked.
-        when ('question') {
-            $sess->fire(question => $event[0]);
-        }
-
-        # spyee disconnected.
-        when ('spyDisconnected') {
-            my $which = $event[0];
-            $which =~ s/Stranger //;
-            $sess->fire(spy_disconnected => $which);
-            $sess->done;
-        }
-
-        # spyee is typing.
-        when ('spyTyping') {
-            continue if $sess->opt('no_type');
-            my $which = $event[0];
-            $which =~ s/Stranger //;
-            $sess->fire(spy_typing => $which) unless $sess->{"typing_$which"};
-            $sess->{"typing_$which"} = 1;
-        }
-
-        # spyee stopped typing.
-        when ('spyStoppedTyping') {
-            continue if $sess->opt('no_type');
-            my $which = $event[0];
-            $which =~ s/Stranger //;
-            $sess->fire(spy_stopped_typing => $which) if $sess->{"typing_$which"};
-            delete $sess->{"typing_$which"};
-        }
-
-        # spyee said something.
-        when ('spyMessage') {
-            my $which = $event[0];
-            $which =~ s/Stranger //;
-            $sess->fire(spy_message => $which, $event[1]);
-            delete $sess->{"typing_$which"};
-        }
-
-        # number of people online.
-        # XXX: this event is obsolete due to statusInfo.
-        # however, Omegle appears to still send it under certain circumstances.
-        # for that reason, we will continue to handle it.
-        when ('count') {
-            $om->{online} = $event[0];
-            
-            # we fire this on the Omegle instance.
-            $sess->{om}->fire(update_user_count => $event[0]);
-            
-        }
-
-        # an error has occured, and the session must end.
-        when ('error') {
-            $sess->fire(error => $event[0]);
-            $sess->done;
-        }
-
-        # captcha was rejected.
-        when ('recaptchaRejected') {
-            $sess->fire('bad_captcha');
-            continue;
-        }
-
-        # server requests captcha.
-        when (['recaptchaRequired', 'recaptchaRejected']) {
-            $sess->{waiting_for_captcha} = 1;
-            
-            $sess->fire(captcha_required => $event[0]);
-
-            # ask reCAPTCHA for an image.
-            $om->get("http://google.com/recaptcha/api/challenge?k=$event[0]&ajax=1", sub {
-                my $data = shift;
-                return unless $data =~ m/challenge : '(.+)'/;
-                $sess->{challenge} = $1;
-
-                # got it; fire the callback.
-                $sess->fire(captcha => "http://www.google.com/recaptcha/api/image?c=$1");
-            });
-        }
-
-        # other
-        default {
-            $sess->fire(debug => "unknown event: $event_name");
-        }
-
-    }
-
-    return 1;
-}
-
 # parse events from Omegle.
 sub handle_events {
     my ($sess, $data) = @_;
-
+    my $om = $sess->{om};
+    
     # must be an array of events for us to care.
     return unless $data =~ m/^\[/;
 
     # event JSON
     $sess->fire(debug_raw => $data);
     my $events = JSON::decode_json($data);
-    $sess->handle_event(@$_) foreach @$events;
+    $sess->handle_event($om, @$_) foreach @$events;
 
     # request more events.
     $sess->request_next_event if $sess->{omegle_id};
@@ -339,6 +182,178 @@ sub request_next_event {
     my $sess = shift;
     $sess->fire(debug => 'requesting next event.');
     $sess->post('events', [], \&handle_events, $sess);
+}
+
+# handle an event from Omegle.
+sub handle_event {
+    my ($sess, $om, $event_name, @event) = @_;
+    my $om = $sess->{om} or return;
+
+    # fire debug events.
+    $sess->fire(debug => 'EVENT: '.$event_name.q[(].join(', ', @event).q[)]);
+    $sess->fire("raw_$event_name" => @event);
+
+    # do we handle this?
+    my $code = $sess->can("e_$event_name");
+    if (!$code) {
+        $sess->fire(debug => "unknown event: $event_name");
+        return
+    }
+    
+    $code->($sess, $om, @event);
+}
+
+# status info update.
+sub e_statusInfo {
+    my ($sess, $om, @event) = @_;
+    $om->_update_status($event[0]);
+    # status_update called later.
+}
+
+# message from server.
+sub e_serverMessage {
+    my ($sess, $om, @event) = @_;
+    $sess->fire(server_message => $event[0]);
+}
+
+# waiting on a chatting partner.
+sub e_waiting {
+    my ($sess, $om, @event) = @_;
+    $sess->{waiting} = 1;
+    $sess->fire('waiting');
+}
+
+# session established.
+sub e_connected {
+    my ($sess, $om, @event) = @_;
+    delete $sess->{waiting_for_captcha};
+    $sess->{connected} = 1;
+    delete $sess->{waiting};
+    $sess->fire('connected'); 
+}
+
+# stranger said something.
+sub e_gotMessage {
+    my ($sess, $om, @event) = @_;
+    $sess->fire(message => $event[0]);
+    delete $sess->{typing};
+}
+
+# stranger disconnected.
+sub e_strangerDisconnected {
+    my ($sess, $om, @event) = @_;
+    $sess->fire('disconnected');
+    $sess->done;
+}
+
+# stranger is typing.
+sub e_typing {
+    my ($sess, $om, @event) = @_;
+    continue if $sess->opt('no_type');
+    $sess->fire('typing') unless $sess->{typing};
+}
+
+# stranger stopped typing.
+sub e_stoppedTyping {
+    my ($sess, $om, @event) = @_;
+    continue if $sess->opt('no_type');
+    $sess->fire('stopped_typing') if $sess->{typing};
+    delete $sess->{typing};
+}
+
+# stranger has similar interests.
+sub e_commonLikes {
+    my ($sess, $om, @event) = @_;
+    $sess->fire(common_interests => @{$event[0]});
+}
+
+# question is asked.
+sub e_question {
+    my ($sess, $om, @event) = @_;
+    $sess->fire(question => $event[0]);
+}
+
+# spyee disconnected.
+sub e_spyDisconnected {
+    my ($sess, $om, @event) = @_;
+    my $which = $event[0];
+    $which =~ s/Stranger //;
+    $sess->fire(spy_disconnected => $which);
+    $sess->done;
+}
+
+# spyee is typing.
+sub e_spyTyping {
+    my ($sess, $om, @event) = @_;
+    continue if $sess->opt('no_type');
+    my $which = $event[0];
+    $which =~ s/Stranger //;
+    $sess->fire(spy_typing => $which) unless $sess->{"typing_$which"};
+    $sess->{"typing_$which"} = 1;
+}
+
+# spyee stopped typing.
+sub e_spyStoppedTyping {
+    my ($sess, $om, @event) = @_;
+    continue if $sess->opt('no_type');
+    my $which = $event[0];
+    $which =~ s/Stranger //;
+    $sess->fire(spy_stopped_typing => $which) if $sess->{"typing_$which"};
+    delete $sess->{"typing_$which"};
+}
+
+# spyee said something.
+sub e_spyMessage {
+    my ($sess, $om, @event) = @_;
+    my $which = $event[0];
+    $which =~ s/Stranger //;
+    $sess->fire(spy_message => $which, $event[1]);
+    delete $sess->{"typing_$which"};
+}
+
+# number of people online.
+# XXX: this event is obsolete due to statusInfo.
+# however, Omegle appears to still send it under certain circumstances.
+# for that reason, we will continue to handle it.
+sub e_count {
+    my ($sess, $om, @event) = @_;
+    $om->{online} = $event[0];
+
+    # we fire this on the Omegle instance.
+    $om->fire(update_user_count => $event[0]);
+
+}
+
+# an error has occured, and the session must end.
+sub e_error {
+    my ($sess, $om, @event) = @_;
+    $sess->fire(error => $event[0]);
+    $sess->done;
+}
+
+# captcha was rejected.
+sub e_recaptchaRejected {
+    my ($sess, $om, @event) = @_;
+    $sess->fire('bad_captcha');
+    continue;
+}
+
+# server requests captcha.
+sub e_recaptchaRejected { &e_recaptchaRequired }
+sub e_recaptchaRequired {
+    my ($sess, $om, @event) = @_;
+    $sess->{waiting_for_captcha} = 1;
+    $sess->fire(captcha_required => $event[0]);
+
+    # ask reCAPTCHA for an image.
+    $om->get("http://google.com/recaptcha/api/challenge?k=$event[0]&ajax=1", sub {
+        my $data = shift;
+        return unless $data =~ m/challenge : '(.+)'/;
+        $sess->{challenge} = $1;
+
+        # got it; fire the callback.
+        $sess->fire(captcha => "http://www.google.com/recaptcha/api/image?c=$1");
+    });
 }
 
 # post to the session server with the 'id' variable.
