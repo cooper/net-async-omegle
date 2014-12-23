@@ -322,10 +322,11 @@ sub handle_event {
 sub handle_events {
     my ($sess, $data) = @_;
 
-    # must be an array of events.
+    # must be an array of events for us to care.
     return unless $data =~ m/^\[/;
 
     # event JSON
+    $sess->fire_event(debug_raw => $data);
     my $events = JSON::decode_json($data);
     $sess->handle_event(@$_) foreach @$events;
 
