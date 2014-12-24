@@ -23,7 +23,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '5.22';
+our $VERSION = '5.23';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -84,7 +84,8 @@ sub _init {
 # update after being added to loop.
 sub _add_to_loop {
     my ($om, $loop) = @_;
-    $om->status_update if $om->{init};
+    $om->_init if !$om->{init};
+    $om->status_update;
 }
 
 # returns the index of the next server in line to be used
