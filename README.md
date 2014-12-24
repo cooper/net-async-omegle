@@ -339,8 +339,7 @@ Log events are fired for debugging purposes.
 
 ### $om = Net::Async::Omegle->new(%options)
 
-Creates an Omegle manager object. After creating it, you should `->add` it to your IO::Async::Loop. Once it has been added, you should
-`$om->init` it. Any of the options listed above may be used, but all are optional.
+Creates an Omegle manager object. After creating it, you should `->add` it to your IO::Async::Loop. Any of the options listed above may be used, but all are optional.
 
 ```perl
 my $om = Net::Async::Omegle->new(
