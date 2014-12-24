@@ -187,7 +187,6 @@ sub request_next_event {
 # handle an event from Omegle.
 sub handle_event {
     my ($sess, $om, $event_name, @event) = @_;
-    my $om = $sess->{om} or return;
 
     # fire debug events.
     $sess->fire(debug => 'EVENT: '.$event_name.q[(].join(', ', @event).q[)]);
@@ -335,11 +334,10 @@ sub e_error {
 sub e_recaptchaRejected {
     my ($sess, $om, @event) = @_;
     $sess->fire('bad_captcha');
-    continue;
+    &e_recaptchaRequired;
 }
 
 # server requests captcha.
-sub e_recaptchaRejected { &e_recaptchaRequired }
 sub e_recaptchaRequired {
     my ($sess, $om, @event) = @_;
     $sess->{waiting_for_captcha} = 1;
