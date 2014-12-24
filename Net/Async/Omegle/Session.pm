@@ -105,7 +105,8 @@ sub say {
 
     # spying session; can't talk
     return if $sess->opt('type') eq 'AskQuestion';
-
+    
+    delete $sess->{im_typing};
     $sess->post('send', [ msg => $msg ]);
 }
 
@@ -120,6 +121,10 @@ sub type {
     # spying session; can't talk
     return if $sess->opt('type') eq 'AskQuestion';
 
+    # already typing
+    return if $sess->{im_typing};
+    $sess->{im_typing}++;
+    
     $sess->post('typing');
 }
 
@@ -133,6 +138,10 @@ sub stop_typing {
 
     # spying session; can't talk
     return if $sess->opt('type') eq 'AskQuestion';
+    
+    # not typing
+    return unless $sess->{im_typing};
+    delete $sess->{im_typing};
 
     $sess->post('stoptyping');
 }
@@ -155,7 +164,7 @@ sub done {
     $sess->fire('done');
     $sess->{om}->remove_session($sess) if $sess->{om};
     exists $sess->{$_} && delete $sess->{$_} foreach qw(
-        running waiting connected omegle_id typing
+        running waiting connected omegle_id typing im_typing
         typing_1 typing_2 type challenge waiting_for_captcha
     );
 }
