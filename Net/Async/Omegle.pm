@@ -85,7 +85,7 @@ sub init { &status_update }
 # update after being added to loop.
 sub _add_to_loop {
     my ($om, $loop) = @_;
-    $om->SUPER::add_to_loop($loop);
+    $om->SUPER::_add_to_loop($loop);
     $om->status_update();
 }
 
