@@ -23,7 +23,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '5.2';
+our $VERSION = '5.21';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -79,13 +79,9 @@ sub _init {
     $om->add_child($timer);
 }
 
-# compat.
-sub init { &status_update }
-
 # update after being added to loop.
 sub _add_to_loop {
     my ($om, $loop) = @_;
-    $om->SUPER::_add_to_loop($loop);
     $om->status_update();
 }
 
@@ -131,6 +127,7 @@ sub get {
 }
 
 # compat.
+sub init   { &status_update }
 sub update { &status_update }
 
 # update server status and user count.
