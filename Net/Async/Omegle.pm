@@ -1,13 +1,14 @@
-########################################
-  package   Net::Async::Omegle         #
-# ------------------------------------ #
-# A clean, non-blocking Perl interface #
-# to Omegle.com for the IO::Async.     #
-# http://github.com/cooper/new-omegle  #
-#             ...and net-async-omegle. #
-########################################
-;
-# Copyright (c) 2011-2013, Mitchell Cooper
+###############################################
+  package     Net::Async::Omegle              ;
+# ------------------------------------------- #
+#                                             #
+# A clean, non-blocking Perl interface to     #
+# Omegle.com for the IO::Async event library. #    
+# http://github.com/cooper/net-async-omegle   #
+#                                             #
+#  Copyright (c) 2011-2014, Mitchell Cooper   #
+#                                             #
+###############################################
 
 use warnings;
 use strict;
@@ -17,12 +18,12 @@ use 5.010;
 use Evented::Object;
 
 use IO::Async::Timer::Periodic;
-use Net::Async::HTTP;
+use Net::Async::HTTP::MultiConn;
 use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '5.0';
+our $VERSION = '5.1';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -62,7 +63,9 @@ sub _init {
 
     # create HTTP instance
     $ua =~ s/\n/ /g;
-    my $http = $om->{http} = Net::Async::HTTP->new(user_agent => $om->{ua} || $ua);
+    my $http = $om->{http} = Net::Async::HTTP::MultiConn->new(
+        user_agent => $om->{ua} || $ua
+    );
     $om->add_child($http);
 
     # create status update timer

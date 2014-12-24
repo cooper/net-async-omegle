@@ -1,14 +1,14 @@
-########################################
-  package Net::Async::Omegle::Session  #
-# ------------------------------------ #
-# A clean, non-blocking Perl interface #
-# to Omegle.com for the IO::Async.     #
-# http://github.com/cooper/new-omegle  #
-#             ...and net-async-omegle. #
-########################################
-;
-# Copyright (c) 2011-2013, Mitchell Cooper
-
+###############################################
+  package Net::Async::Omegle::Session         ;
+# ------------------------------------------- #
+#                                             #
+# A clean, non-blocking Perl interface to     #
+# Omegle.com for the IO::Async event library. #    
+# http://github.com/cooper/net-async-omegle   #
+#                                             #
+#  Copyright (c) 2011-2014, Mitchell Cooper   #
+#                                             #
+###############################################
 
 use warnings;
 use strict;
