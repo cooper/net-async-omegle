@@ -13,3 +13,5 @@ sub get_connection {
     $self->{connections} = {};
     return $self->SUPER::get_connection(@args);
 }
+
+1
