@@ -23,7 +23,7 @@ use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '5.23';
+our $VERSION = '5.12';
 
 # default user agent. used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
@@ -60,8 +60,7 @@ sub configure {
 # new instance created.
 sub _init {
     my $om = shift;
-    $om->{init} = 1;
-    
+
     # create HTTP instance
     $ua =~ s/\n/ /g;
     my $http = $om->{http} = Net::Async::HTTP::MultiConn->new(
@@ -78,15 +77,10 @@ sub _init {
         }
     );
     $om->add_child($timer);
-    $om->status_update if $om->loop;
 }
 
-# update after being added to loop.
-sub _add_to_loop {
-    my ($om, $loop) = @_;
-    $om->_init if !$om->{init};
-    $om->status_update;
-}
+# should be called right after $loop->add().
+sub init { &status_update }
 
 # returns the index of the next server in line to be used
 sub newserver {
@@ -130,7 +124,6 @@ sub get {
 }
 
 # compat.
-sub init   { &status_update }
 sub update { &status_update }
 
 # update server status and user count.
