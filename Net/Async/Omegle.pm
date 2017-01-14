@@ -19,15 +19,16 @@ use Evented::Object;
 use IO::Async::Timer::Periodic;
 use Net::Async::HTTP::MultiConn;
 use Net::Async::Omegle::Session;
-use JSON ();
-use URI  ();
+use JSON::XS qw(encode_json decode_json);
+use URI ();
 
-our $VERSION = '5.13';
+our $VERSION = '5.14';
 
 # default user agent.
 # used only if 'ua' option is not provided to the Omegle instance.
 our $ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/602.4.2
 (KHTML, like Gecko) Version/10.0.3 Safari/602.4.2";
+our $OMEGLE_ROOT = 'http://omegle.com';
 
 sub new {
     my $ref = shift;
@@ -127,8 +128,8 @@ sub update { &status_update }
 # update server status and user count.
 sub status_update {
     my $om = shift;
-    $om->post('http://omegle.com/status', [], sub {
-        my $data = JSON::decode_json(shift);
+    $om->post("$OMEGLE_ROOT/status", [], sub {
+        my $data = $om->decode(shift);
         $om->_update_status($data);
     });
 }
@@ -149,9 +150,8 @@ sub _update_status {
     # fire ready event if we haven't already.
     if (!$om->{fired_ready}) {
         $om->fire('ready');
-        $om->{fired_ready} = 1;
+        $om->{fired_ready}++;
     }
-
 }
 
 # add a session to this omegle instance.
@@ -194,6 +194,30 @@ sub last_server {
     my $om = shift;
     return if !defined $om->{lastserver};
     return $om->{servers}[ $om->{lastserver} ];
+}
+
+# safely encode data
+sub encode {
+    my ($om_or_sess, $data) = @_;
+    my $ret = eval { encode_json($data) };
+    if ($@) {
+        $om_or_sess->fire(encoding_error => $@);
+        $om_or_sess ->fire(debug => "JSON encode error: $@");
+        return;
+    }
+    return $ret;
+}
+
+# safely decode data
+sub decode {
+    my ($om_or_sess, $data) = @_;
+    my $ret = eval { decode_json($data) };
+    if ($@) {
+        $om_or_sess->fire(encoding_error => $@);
+        $om_or_sess->fire(debug => "JSON decode error: $@");
+        return;
+    }
+    return $ret;
 }
 
 1

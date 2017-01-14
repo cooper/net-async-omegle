@@ -17,7 +17,10 @@ use parent 'Evented::Object';
 
 use URI::Escape::XS 'encodeURIComponent';
 
-our $VERSION = $Net::Async::Omegle::VERSION;
+our $VERSION = '5.14';
+
+our $CAPTCHA_CHLNG = 'http://google.com/recaptcha/api/challenge?ajax=1&k=';
+our $CAPTCHA_IMAGE = 'http://www.google.com/recaptcha/api/image?c=';
 
 # create a new session object.
 # typically, this is not used directly.
@@ -47,7 +50,7 @@ sub start {
 
     # common interests mode.
     if ($type eq 'CommonInterests') {
-        my $topics  = JSON::encode_json($sess->opt('topics'));
+        my $topics  = $sess->encode($sess->opt('topics'));
         $startopts .= '&topics='.encodeURIComponent($topics);
         $sess->{stopsearching} = time() + 5;
     }
@@ -175,11 +178,11 @@ sub handle_events {
     my $om = $sess->{om};
 
     # must be an array of events for us to care.
-    return unless $data =~ m/^\[/;
+    return if index($data, '[');
 
     # event JSON
     $sess->fire(debug_raw => $data);
-    my $events = JSON::decode_json($data);
+    my $events = $sess->decode($data);
     $sess->handle_event($om, @$_) foreach @$events;
 
     # request more events.
@@ -189,7 +192,7 @@ sub handle_events {
 # request an event from Omegle.
 sub request_next_event {
     my $sess = shift;
-    $sess->fire(debug => 'requesting next event.');
+    $sess->fire(debug => 'Requesting next event');
     $sess->post('events', [], \&handle_events, $sess);
 }
 
@@ -198,13 +201,14 @@ sub handle_event {
     my ($sess, $om, $event_name, @event) = @_;
 
     # fire debug events.
-    $sess->fire(debug => 'EVENT: '.$event_name.q[(].join(', ', @event).q[)]);
+    my $stuff = join ', ', @event;
+    $sess->fire(debug => "EVENT: $event_name($stuff)");
     $sess->fire("raw_$event_name" => @event);
 
     # do we handle this?
     my $code = $sess->can("e_$event_name");
     if (!$code) {
-        $sess->fire(debug => "unknown event: $event_name");
+        $sess->fire(debug => "Unknown event: $event_name");
         return
     }
 
@@ -349,14 +353,18 @@ sub e_recaptchaRequired {
     $sess->fire(captcha_required => $key);
 
     # ask reCAPTCHA for an image.
-    $om->get("http://google.com/recaptcha/api/challenge?k=$key&ajax=1", sub {
+    $om->get($CAPTCHA_CHLNG.$key, sub {
         my $data = shift;
-        return unless $data =~ m/challenge : '(.+)'/;
-        $sess->{challenge} = $1;
+
+        # ???
+        if ($data !~ m/challenge : '(.+)'/) {
+            $sess->fire(debug => "Couldn't find captcha challenge");
+            return;
+        }
 
         # got it; fire the callback.
-        my $url = "http://www.google.com/recaptcha/api/image?c=$1";
-        $sess->fire(captcha => $url);
+        $sess->{challenge} = $1;
+        $sess->fire(captcha => $CAPTCHA_IMAGE.$1);
     });
 }
 
@@ -411,8 +419,11 @@ sub waiting_for_captcha {
     return shift->{waiting_for_captcha};
 }
 
-# compat.
-sub omegle_id { &id }
+# encode/decode JSON.
+sub encode;
+sub decode;
+*encode = *Net::Async::Omegle::encode;
+*decode = *Net::Async::Omegle::decode;
 
 # returns true if the stranger is typing.
 # in ask/answer modes, returns true if either stranger is typing.
