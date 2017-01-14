@@ -3,7 +3,7 @@
 # ------------------------------------------- #
 #                                             #
 # A clean, non-blocking Perl interface to     #
-# Omegle.com for the IO::Async event library. #    
+# Omegle.com for the IO::Async event library. #
 # http://github.com/cooper/net-async-omegle   #
 #                                             #
 #  Copyright (c) 2011-2014, Mitchell Cooper   #
@@ -11,23 +11,23 @@
 ###############################################
 
 use warnings;
-use strict;
-use parent qw(IO::Async::Notifier Evented::Object); # notifier must be first for SUPER.
+use strict; # notifier must be first for SUPER->new().
+use parent qw(IO::Async::Notifier Evented::Object);
 use 5.010;
 
 use Evented::Object;
-
 use IO::Async::Timer::Periodic;
 use Net::Async::HTTP::MultiConn;
 use Net::Async::Omegle::Session;
 use JSON ();
 use URI  ();
 
-our $VERSION = '5.12';
+our $VERSION = '5.13';
 
-# default user agent. used only if 'ua' option is not provided to the Omegle instance.
-our $ua = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.11 (KHTML, like Gecko)
-Chrome/17.0.963.12 Safari/535.11";
+# default user agent.
+# used only if 'ua' option is not provided to the Omegle instance.
+our $ua = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/602.4.2
+(KHTML, like Gecko) Version/10.0.3 Safari/602.4.2";
 
 sub new {
     my $ref = shift;
@@ -41,13 +41,12 @@ sub new {
 
     # create a new Omegle instance (IO::Async::Notifier).
     return $ref->SUPER::new(@_);
-    
+
 }
 
 # IO::Async::Notifier configure.
 sub configure {
     my ($om, %params) = @_;
-
     $params{type} ||= 'Traditional';
 
     foreach (qw|topics question server static no_type type|) {
@@ -82,19 +81,19 @@ sub _init {
 # should be called right after $loop->add().
 sub init { &status_update }
 
-# returns the index of the next server in line to be used
+# returns the next server in line to be used
 sub newserver {
     my $om = shift;
-    $om->{servers}[
-        (defined $om->{lastserver} && $om->{lastserver} == $#{$om->{servers}}) ? $om->{lastserver} = 0
-        : ++$om->{lastserver}
-    ]
+    return $om->{servers}[
+        (defined $om->{lastserver} &&
+            $om->{lastserver} == $#{ $om->{servers} }
+        ) ? ($om->{lastserver} = 0) : ++$om->{lastserver}
+    ];
 }
 
 # make a POST request.
 sub post {
     my ($om, $uri, $vars, $callback, @args) = @_;
-
     $om->{http}->do_request(
         method       => 'POST',
         uri          => URI->new($uri),
@@ -105,21 +104,20 @@ sub post {
             $callback->(@args, $content) if $callback;
         } }
     ) or return;
-
     return 1;
 }
 
 # make a GET request.
 sub get {
     my ($om, $uri, $callback, @args) = @_;
-
     $om->{http}->do_request(
         method       => 'GET',
         uri          => URI->new($uri),
         on_error     => sub { },
-        on_response  => sub { $callback->(@args, shift->content) if $callback }
+        on_response  => sub {
+            $callback->(@args, shift->content) if $callback;
+        }
     ) or return;
-
     return 1;
 }
 
@@ -129,7 +127,6 @@ sub update { &status_update }
 # update server status and user count.
 sub status_update {
     my $om = shift;
-
     $om->post('http://omegle.com/status', [], sub {
         my $data = JSON::decode_json(shift);
         $om->_update_status($data);
@@ -140,28 +137,28 @@ sub status_update {
 sub _update_status {
     my ($om, $data) = @_;
     $om->{servers}    = $data->{servers};
-    $om->{lastserver} = $#{$data->{servers}};
+    $om->{lastserver} = $#{ $data->{servers} };
     $om->{online}     = $data->{count};
     $om->{toosexy}    = $data->{force_unmon};
     $om->{updated}    = time;
-    
+
     # fire the generic status update event.
     $om->fire('status_update');
     $om->fire(update_user_count => $data->{count});
-    
+
     # fire ready event if we haven't already.
     if (!$om->{fired_ready}) {
         $om->fire('ready');
         $om->{fired_ready} = 1;
     }
-    
+
 }
 
 # add a session to this omegle instance.
 sub add_session {
     my ($om, $sess) = @_;
-    return if $sess->{om} && $sess->{om} == $om;
-    $om->{sessions}{$sess->{omegle_id}} = $sess if $sess->{omegle_id};
+    return if $sess->om && $sess->om == $om;
+    $om->{sessions}{ $sess->id } = $sess if $sess->id;
     $sess->{om} = $om;
     return 1;
 }
@@ -169,8 +166,8 @@ sub add_session {
 # remove a session from this omegle instance.
 sub remove_session {
     my ($om, $sess) = @_;
-    return if !$sess->{om} || $sess->{om} != $om;
-    delete $om->{sessions}{$sess->{omegle_id}};
+    return if !$sess->om || $sess->om != $om;
+    delete $om->{sessions}{ $sess->id };
     delete $sess->{om};
     return 1;
 }
@@ -178,7 +175,7 @@ sub remove_session {
 # returns the number of users currently online.
 sub user_count {
     my $om = shift;
-    return my @a = ($om->{online} || 0, $om->{updated}) if wantarray; 
+    return my @a = ($om->{online} || 0, $om->{updated}) if wantarray;
     return $om->{online} || 0;
 }
 
@@ -188,15 +185,15 @@ sub half_banned { shift->{toosexy} }
 # returns an array of available servers.
 sub servers {
     my $om = shift;
-    return @{$om->{servers}} if $om->{servers};
-    return my @a;
+    return @{ $om->{servers} } if $om->{servers};
+    return;
 }
 
 # returns the name of the last server used.
 sub last_server {
     my $om = shift;
     return if !defined $om->{lastserver};
-    return $om->{servers}[$om->{lastserver}];
+    return $om->{servers}[ $om->{lastserver} ];
 }
 
 1
