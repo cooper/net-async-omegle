@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON::XS qw(encode_json decode_json);
 use URI ();
 
-our $VERSION = '5.14';
+our $VERSION = '5.15';
 
 # default user agent.
 # used only if 'ua' option is not provided to the Omegle instance.

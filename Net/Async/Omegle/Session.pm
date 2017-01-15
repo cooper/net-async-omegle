@@ -17,7 +17,7 @@ use parent 'Evented::Object';
 
 use URI::Escape::XS 'encodeURIComponent';
 
-our $VERSION = '5.14';
+our $VERSION = '5.15';
 
 our $CAPTCHA_CHLNG = 'http://google.com/recaptcha/api/challenge?ajax=1&k=';
 our $CAPTCHA_IMAGE = 'http://www.google.com/recaptcha/api/image?c=';
@@ -100,7 +100,7 @@ sub submit_captcha {
 
 # $sess->say($message)
 # send a message.
-sub say {
+sub say : method {
     my ($sess, $msg) = @_;
 
     # session not established entirely
@@ -109,8 +109,20 @@ sub say {
     # spying session; can't talk
     return if $sess->opt('type') eq 'AskQuestion';
 
+    # Safe point - we'll try to send the message.
+
+    # stop typing and store the message ID.
     delete $sess->{im_typing};
-    $sess->post('send', [ msg => $msg ]);
+    my $id = $sess->{message_id_counter}++;
+
+    # 'win' means the message was sent successfully
+    $sess->post('send', [ msg => $msg ], sub {
+        my $content = shift;
+        return if $content ne 'win';
+        $sess->fire(you_message => $msg, $id);
+    });
+
+    return $id;
 }
 
 # $sess->type()
@@ -169,6 +181,7 @@ sub done {
     exists $sess->{$_} && delete $sess->{$_} foreach qw(
         running waiting connected omegle_id typing im_typing
         typing_1 typing_2 type challenge waiting_for_captcha
+        message_id_counter
     );
 }
 

@@ -237,6 +237,13 @@ $sess->on(message => sub {
 
 * __$message__ - the message text from the stranger.
 
+### session.you_message($message, $id)
+
+Fired when your message is delivered.
+
+* __$message__ - the message text as you sent it.
+* __$id__ - the message ID, which was previously returned by `->say()`.
+
 ### session.disconnected()
 
 Fired when the stranger disconnects from the conversation. This ends the
@@ -499,13 +506,15 @@ Returns true or `undef` if there is no session connected.
 $sess->stop_typing;
 ```
 
-### $sess->say($message)
+### $id = $sess->say($message)
 
 Sends a message to the stranger.
-Returns true or `undef` if there is no session connected.
+
+Returns `undef` if there is no session connected. Otherwise, returns a message
+ID which may later be passed to the `you_message` event upon delivery.
 
 ```perl
-$sess->say('hey there :]');
+my $id = $sess->say('hey there :]');
 ```
 
 * __$message__ - the text to send to the stranger.
