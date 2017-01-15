@@ -414,6 +414,11 @@ sub id {
     return shift->{omegle_id};
 }
 
+# returns the omegle manager.
+sub om {
+    return shift->{om};
+}
+
 # returns whether the server is waiting on a captcha response.
 sub waiting_for_captcha {
     return shift->{waiting_for_captcha};
