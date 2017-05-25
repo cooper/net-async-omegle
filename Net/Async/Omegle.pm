@@ -22,7 +22,7 @@ use Net::Async::Omegle::Session;
 use JSON::XS qw(encode_json decode_json);
 use URI ();
 
-our $VERSION = '5.15';
+our $VERSION = '5.16';
 
 # default user agent.
 # used only if 'ua' option is not provided to the Omegle instance.
@@ -73,7 +73,7 @@ sub _init {
         interval => 300,
         on_tick  => sub {
             return unless time - ($om->{updated} || 0) >= 300;
-            $om->status_update();
+            $om->status_update;
         }
     );
     $om->add_child($timer);
@@ -144,11 +144,13 @@ sub _update_status {
     $om->{updated}    = time;
 
     # fire the generic status update event.
+    $om->debug('Status update: '.$data->{count});
     $om->fire('status_update');
     $om->fire(update_user_count => $data->{count});
 
     # fire ready event if we haven't already.
     if (!$om->{fired_ready}) {
+        $om->debug('Ready');
         $om->fire('ready');
         $om->{fired_ready}++;
     }
@@ -202,7 +204,7 @@ sub encode {
     my $ret = eval { encode_json($data) };
     if ($@) {
         $om_or_sess->fire(encoding_error => $@);
-        $om_or_sess ->fire(debug => "JSON encode error: $@");
+        $om_or_sess->debug("JSON encode error: $@");
         return;
     }
     return $ret;
@@ -214,10 +216,15 @@ sub decode {
     my $ret = eval { decode_json($data) };
     if ($@) {
         $om_or_sess->fire(encoding_error => $@);
-        $om_or_sess->fire(debug => "JSON decode error: $@");
+        $om_or_sess->debug("JSON decode error: $@");
         return;
     }
     return $ret;
+}
+
+sub debug {
+    my ($om_or_sess, $msg) = @_;
+    $om_or_sess->fire(debug => $msg);
 }
 
 1

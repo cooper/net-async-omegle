@@ -17,7 +17,7 @@ use parent 'Evented::Object';
 
 use URI::Escape::XS 'encodeURIComponent';
 
-our $VERSION = '5.15';
+our $VERSION = '5.16';
 
 our $CAPTCHA_CHLNG = 'http://google.com/recaptcha/api/challenge?ajax=1&k=';
 our $CAPTCHA_IMAGE = 'http://www.google.com/recaptcha/api/image?c=';
@@ -34,7 +34,7 @@ sub new {
 # create a new Omegle session.
 sub start {
     my $sess = shift;
-    my $om   = $sess->{om} or return;
+    my $om   = $sess->om or return;
 
     # we are already running?
     return if $sess->{running};
@@ -118,7 +118,11 @@ sub say : method {
     # 'win' means the message was sent successfully
     $sess->post('send', [ msg => $msg ], sub {
         my $content = shift;
-        return if $content ne 'win';
+        if ($content ne 'win') {
+            $sess->debug("Bad response for message $id: $content");
+            return;
+        }
+        $sess->debug("Message $id sent successfully.");
         $sess->fire(you_message => $msg, $id);
     });
 
@@ -177,7 +181,7 @@ sub disconnect {
 sub done {
     my $sess = shift;
     $sess->fire('done');
-    $sess->{om}->remove_session($sess) if $sess->{om};
+    $sess->om->remove_session($sess) if $sess->om;
     exists $sess->{$_} && delete $sess->{$_} foreach qw(
         running waiting connected omegle_id typing im_typing
         typing_1 typing_2 type challenge waiting_for_captcha
@@ -188,7 +192,7 @@ sub done {
 # parse events from Omegle.
 sub handle_events {
     my ($sess, $data) = @_;
-    my $om = $sess->{om};
+    my $om = $sess->om;
 
     # must be an array of events for us to care.
     return if index($data, '[');
@@ -205,7 +209,7 @@ sub handle_events {
 # request an event from Omegle.
 sub request_next_event {
     my $sess = shift;
-    $sess->fire(debug => 'Requesting next event');
+    $sess->debug('Requesting next event');
     $sess->post('events', [], \&handle_events, $sess);
 }
 
@@ -215,13 +219,13 @@ sub handle_event {
 
     # fire debug events.
     my $stuff = join ', ', @event;
-    $sess->fire(debug => "EVENT: $event_name($stuff)");
+    $sess->debug("EVENT: $event_name($stuff)");
     $sess->fire("raw_$event_name" => @event);
 
     # do we handle this?
     my $code = $sess->can("e_$event_name");
     if (!$code) {
-        $sess->fire(debug => "Unknown event: $event_name");
+        $sess->debug("Unknown event: $event_name");
         return
     }
 
@@ -371,7 +375,7 @@ sub e_recaptchaRequired {
 
         # ???
         if ($data !~ m/challenge : '(.+)'/) {
-            $sess->fire(debug => "Couldn't find captcha challenge");
+            $sess->debug("Couldn't find captcha challenge");
             return;
         }
 
@@ -384,7 +388,7 @@ sub e_recaptchaRequired {
 # post to the session server with the 'id' variable.
 sub post {
     my ($sess, $page, $vars, $callback, @args) = @_;
-    my $om = $sess->{om} or return;
+    my $om = $sess->om or return;
     $om->post("http://$$sess{server}/$page", [
         id => $sess->id,
         @{ $vars || [] }
@@ -396,15 +400,16 @@ sub post {
 # it also fires the event on the Omegle object, using the session as the first argument.
 sub fire {
     my ($sess, $event_name, @args) = @_;
-    $sess->fire_event($event_name => @args);
-    $sess->{om}->fire_event($event_name => $sess, @args) if $sess->{om};
+    my @events = [ $event_name => @args ];
+    push @events, [ $sess->om, $event_name => $sess, @args ] if $sess->om;
+    $sess->fire_events_together(@events);
     return 1;
 }
 
 # get an option, either from the session or from the Omegle instance.
 sub opt {
     my ($sess, $opt) = @_;
-    $sess->{$opt} || $sess->{om}{opts}{$opt}
+    return $sess->{$opt} || ($sess->om ? $sess->om->{opts}{$opt} : undef);
 }
 
 # returns true if the session is running (/start request completed)
@@ -463,5 +468,8 @@ sub server {
 sub session_type {
     return shift->opt('type');
 }
+
+sub debug;
+*debug = *Net::Async::Omegle::debug;
 
 1
